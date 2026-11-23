@@ -8,7 +8,45 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="BrainRoyale" />
-  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.6)</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <script>
+    window.BR_VERSION = '2.9.0';
+    (function () {
+      var KEY = 'br_error_log_v1';
+      function push(msg, extra) {
+        try {
+          var list = [];
+          try { list = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (_) {}
+          list.push({ t: Date.now(), msg: String(msg || 'unknown error').slice(0, 300), extra: String(extra || '').slice(0, 300) });
+          localStorage.setItem(KEY, JSON.stringify(list.slice(-15)));
+        } catch (_) { /* буфер недоступен — не мешаем игре */ }
+      }
+      window.BR_ERROR_LOG = {
+        read: function () { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (_) { return []; } },
+        clear: function () { try { localStorage.removeItem(KEY); } catch (_) {} }
+      };
+      window.addEventListener('error', function (ev) {
+        push((ev && ev.message) || (ev && ev.error && ev.error.message) || 'script error',
+             (ev && ev.filename) ? (ev.filename + ':' + (ev.lineno || 0)) : '');
+      });
+      window.addEventListener('unhandledrejection', function (ev) {
+        var r = ev && ev.reason;
+        push('Promise: ' + ((r && r.message) || r || 'unknown'), '');
+      });
+    })();
+  </script>
+  <script>
+    // Тактильный отклик через Telegram (вне TG — тихо выключается)
+    window.BR_HAPTIC = {
+      tg: function () { try { return (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null; } catch (_) { return null; } },
+      enabled: function () { var t = this.tg(); return !!(t && t.HapticFeedback); },
+      impact: function (style) { try { if (this.enabled()) this.tg().HapticFeedback.impactOccurred(style || 'light'); } catch (_) {} },
+      notification: function (type) { try { if (this.enabled()) this.tg().HapticFeedback.notificationOccurred(type || 'success'); } catch (_) {} },
+      selection: function () { try { if (this.enabled()) this.tg().HapticFeedback.selectionChanged(); } catch (_) {} }
+    };
+  </script>
+  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.9)</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="BrainRoyale — Умное Казино 🧠🎰" />
   <meta property="og:description" content="Монеты только за решение задач! 20 игр, 7 тренажёров мозга, 0₽ донатов." />
@@ -1375,8 +1413,79 @@ canvas {
   max-width: 100%;
 }
 
+/* === BrainRoyale v2.8 — GUI удобство === */
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.hero-compact { padding: 10px 12px; margin-bottom: 12px; }
+.hero-compact-row { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.hero-compact-text { font-size: 13px; color: var(--text-secondary); }
+.hero-compact-actions { display:flex; gap:6px; }
+
+.lobby-search-wrap { position: relative; margin-bottom: 10px; }
+.lobby-search { width:100%; height:44px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-primary); padding:0 40px 0 38px; font-size:14px; outline:none; box-sizing:border-box; }
+.lobby-search:focus { border-color: var(--purple); box-shadow:0 0 0 3px rgba(140,82,255,0.25); }
+.lobby-search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:16px; pointer-events:none; }
+.lobby-search-clear { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); font-size:17px; cursor:pointer; padding:8px; }
+.lobby-empty { grid-column: 1 / -1; text-align:center; padding:26px 12px; color:var(--text-muted); font-size:13px; }
+
+.game-desc { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; }
+.game-meta { font-size:12px; }
+
+.earn-plus-short { display:none; }
+@media (max-width: 400px) {
+  #hdr-rank-text { display:none; }
+  .balance-val { font-size:14px; }
+  .earn-plus-full { display:none; }
+  .earn-plus-short { display:inline; }
+}
+
+/* Нижняя панель: «🧠 Умом» — главный CTA */
+.nav-earn { position:relative; }
+.nav-earn-orb { width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg, var(--emerald), #00b0ff); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 6px 18px rgba(0,230,118,0.4), inset 0 -3px 6px rgba(0,0,0,0.25); transform:translateY(-12px); border:3px solid #0c1120; }
+.nav-earn .nav-label { color:var(--emerald); font-weight:800; margin-top:-10px; }
+.nav-earn.active .nav-label { color:var(--emerald); }
+
+/* Скелетон-загрузка (Тусовка) */
+@keyframes shimmer { 0% { background-position:100% 0; } 100% { background-position:0 0; } }
+.skeleton-card { height:78px; border-radius:14px; background:linear-gradient(110deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%); background-size:400% 100%; animation:shimmer 1.4s infinite; margin-bottom:10px; }
+
+/* Плавающее «+N 🪙» над балансом */
+@keyframes floatUp { 0% { opacity:0; transform:translateY(6px); } 15% { opacity:1; } 100% { opacity:0; transform:translateY(-30px); } }
+.balance-pill { position:relative; }
+.float-delta { position:absolute; right:0; top:100%; margin-top:6px; font-weight:900; font-size:13px; color:var(--emerald); animation:floatUp 1.4s ease forwards; pointer-events:none; text-shadow:0 2px 6px rgba(0,0,0,0.6); z-index:99; white-space:nowrap; }
+.float-delta.neg { color:var(--crimson); }
+
+/* Кнопка «наверх» */
+#scroll-top { position:fixed; right:14px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); z-index:96; width:44px; height:44px; border-radius:50%; border:1px solid var(--border-subtle); background:rgba(20,26,48,0.95); color:var(--text-primary); font-size:18px; cursor:pointer; display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+#scroll-top.visible { display:flex; }
+
+/* === FX: анимации и сочность (v2.9) === */
+#fx-layer { position:fixed; inset:0; pointer-events:none; z-index:200; overflow:hidden; }
+.fx-confetti { position:absolute; top:-44px; animation:fxConfettiFall linear forwards; }
+@keyframes fxConfettiFall { 0% { transform:translateY(-2vh) rotate(0deg); opacity:1; } 100% { transform:translateY(112vh) rotate(720deg); opacity:0.85; } }
+.fx-bigwin { position:absolute; top:22%; left:50%; transform:translate(-50%,-50%) scale(0.6); text-align:center; animation:bigwinIn 0.45s cubic-bezier(0.2,1.6,0.4,1) forwards; width:100%; }
+.fx-bigwin.out { opacity:0; transform:translate(-50%,-60%) scale(0.92); transition:all 0.4s ease; }
+@keyframes bigwinIn { 0% { opacity:0; transform:translate(-50%,-50%) scale(0.5); } 100% { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+.fx-bigwin-title { font-size:44px; font-weight:900; letter-spacing:2px; background:linear-gradient(180deg,#fff8c5,#ffd54f 45%,#ff9d00); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 0 34px rgba(255,200,60,0.45)); }
+.fx-bigwin.tier-normal .fx-bigwin-title { font-size:28px; letter-spacing:1px; }
+.fx-bigwin.tier-big .fx-bigwin-title { font-size:38px; }
+.fx-bigwin.tier-mega .fx-bigwin-title { font-size:48px; }
+.fx-bigwin-sub { font-size:20px; font-weight:800; color:#ffe98a; margin-top:6px; text-shadow:0 2px 12px rgba(0,0,0,0.65); }
+.fx-flash { position:absolute; inset:0; animation:fxFlash 0.38s ease-out forwards; }
+@keyframes fxFlash { 0% { opacity:1; } 100% { opacity:0; } }
+@keyframes fxShakeK { 0%,100% { transform:translate(0,0); } 20% { transform:translate(-10px,4px); } 40% { transform:translate(9px,-3px); } 60% { transform:translate(-7px,-4px); } 80% { transform:translate(6px,3px); } }
+body.fx-shake .app-shell { animation:fxShakeK 0.45s ease; }
+body.fx-shake-hard .app-shell { animation:fxShakeK 0.62s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .fx-confetti, .fx-bigwin, .fx-flash { animation:none !important; display:none !important; }
+  body.fx-shake .app-shell, body.fx-shake-hard .app-shell { animation:none !important; }
+}
+
   </style>
   <script async src="https://telegram.org/js/telegram-web-app.js" onload="window.SocialArena && window.SocialArena.onSdkLoaded && window.SocialArena.onSdkLoaded()"></script>
+    <!-- Firebase SDK (для друзей-казино; если не настроить — игра работает автономно) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div id="toast-container" class="toast-container"></div>
@@ -1398,9 +1507,10 @@ canvas {
         <div class="balance-pill">
           <span class="balance-coin">🪙</span>
           <span class="balance-val num" id="hdr-balance">0</span>
-          <button class="earn-plus-btn" id="hdr-earn-btn" title="Заработать монеты решением задач">+ Умом</button>
+          <button class="earn-plus-btn" id="hdr-earn-btn" title="Заработать монеты решением задач"><span class="earn-plus-full">+ Умом</span><span class="earn-plus-short">🧠</span></button>
         </div>
         <button class="icon-btn" id="hdr-mute-btn" title="Звук">🔊</button>
+        <a class="icon-btn" id="hdr-apk-btn" href="BrainRoyale-SmartCasino.apk" download title="Скачать BrainRoyale для Android (.apk, 0.8 МБ)" style="display:none; text-decoration:none;">🤖</a>
       </div>
     </header>
 
@@ -1411,8 +1521,8 @@ canvas {
         <span class="nav-icon">🎰</span>
         <span class="nav-label">Игры</span>
       </button>
-      <button class="nav-item" data-tab="earn">
-        <span class="nav-icon">🧠</span>
+      <button class="nav-item nav-earn" data-tab="earn">
+        <span class="nav-earn-orb">🧠</span>
         <span class="nav-label">Умом</span>
       </button>
       <button class="nav-item" data-tab="friends">
@@ -1429,6 +1539,7 @@ canvas {
         <span class="nav-label">Профиль</span>
       </button>
     </nav>
+    <button id="scroll-top" aria-label="Наверх">↑</button>
   </div>
 
   <script>
@@ -1598,8 +1709,140 @@ window.SFX = (function () {
       noiseBurst(0.38, 0.26);
       tone(130, 0.35, 'sawtooth', 0.18, 0, 38);
       vibrate(95);
+    },
+    coin() {
+      tone(1320, 0.07, 'square', 0.07);
+      tone(1760, 0.13, 'sine', 0.12, 0.045);
+      vibrate(12);
+    },
+    cashout() {
+      [1567.98, 2093, 2637].forEach((f, i) => tone(f, 0.17, 'triangle', 0.12, i * 0.05));
+      vibrate(28);
+    },
+    levelup() {
+      [659.25, 830.61, 987.77, 1318.5].forEach((f, i) => tone(f, 0.24, 'sine', 0.13, i * 0.075));
+      vibrate(45);
+    },
+    spin() {
+      for (let i = 0; i < 7; i++) tone(850 + Math.random() * 350, 0.03, 'square', 0.04, i * 0.055);
+      vibrate(6);
+    },
+    lose() {
+      tone(196, 0.22, 'sawtooth', 0.09, 0, 128);
+      vibrate(45);
+    },
+    sparkle() {
+      [2093, 2637, 3136].forEach((f, i) => tone(f, 0.18, 'sine', 0.075, i * 0.06));
+      vibrate(14);
     }
   };
+})();
+
+// === fx.js ===
+// Визуальный «сок» игры: конфетти, баннер BIG WIN, вспышки, тряска экрана.
+// Уважает prefers-reduced-motion. Всё синтезировано DOM+CSS, без ассетов.
+window.FX = (function () {
+  const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fmtN = (n) => (window.GameCore && window.GameCore.fmt ? window.GameCore.fmt(n) : String(Math.round(n)));
+
+  function layer() {
+    let l = document.getElementById('fx-layer');
+    if (!l) {
+      l = document.createElement('div');
+      l.id = 'fx-layer';
+      document.body.appendChild(l);
+    }
+    return l;
+  }
+
+  function confetti(count) {
+    if (reduced) return;
+    const EMOJI = ['🪙', '✨', '⭐', '🎉', '💛', '💎'];
+    const l = layer();
+    const n = Math.max(8, Math.min(120, count | 0));
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('span');
+      p.className = 'fx-confetti';
+      p.textContent = EMOJI[i % EMOJI.length];
+      p.style.left = (Math.random() * 100) + 'vw';
+      p.style.fontSize = (13 + Math.random() * 18) + 'px';
+      p.style.animationDelay = (Math.random() * 0.4) + 's';
+      p.style.animationDuration = (1.5 + Math.random() * 1.3) + 's';
+      l.appendChild(p);
+      setTimeout(() => p.remove(), 3400);
+    }
+  }
+
+  function bigWinBanner(title, subtitle, tier) {
+    if (reduced) {
+      if (window.UI) window.UI.toast(title + (subtitle ? ' — ' + subtitle : ''), 'gold');
+      return;
+    }
+    const l = layer();
+    const b = document.createElement('div');
+    b.className = 'fx-bigwin' + (tier ? ' tier-' + tier : '');
+    b.innerHTML = '<div class="fx-bigwin-title">' + title + '</div>' + (subtitle ? '<div class="fx-bigwin-sub">' + subtitle + '</div>' : '');
+    l.appendChild(b);
+    setTimeout(() => {
+      b.classList.add('out');
+      setTimeout(() => b.remove(), 450);
+    }, tier === 'mega' ? 2500 : 1800);
+  }
+
+  function shake(intensity) {
+    if (reduced) return;
+    document.body.classList.remove('fx-shake', 'fx-shake-hard');
+    void document.body.offsetWidth;
+    document.body.classList.add(intensity === 'hard' ? 'fx-shake-hard' : 'fx-shake');
+    setTimeout(() => document.body.classList.remove('fx-shake', 'fx-shake-hard'), 650);
+  }
+
+  function flash(color) {
+    if (reduced) return;
+    const l = layer();
+    const f = document.createElement('div');
+    f.className = 'fx-flash';
+    f.style.background = color || 'rgba(255, 214, 90, 0.26)';
+    l.appendChild(f);
+    setTimeout(() => f.remove(), 400);
+  }
+
+  // Единая точка для всех 20 игр: вызывается из AppState.winPayout
+  function onWin(amount, multiplier, jackpotBonus) {
+    try {
+      const a = Math.round(amount || 0);
+      const mult = Number(multiplier) || 1;
+      const jb = Math.round(jackpotBonus || 0);
+      if (jb > 0) {
+        confetti(95);
+        bigWinBanner('МЕГА-ДЖЕКПОТ!', '+' + fmtN(jb) + ' 🪙 · x' + mult.toFixed(1), 'mega');
+        flash('rgba(255, 200, 60, 0.32)');
+        shake('hard');
+        return;
+      }
+      if (mult >= 25 || a >= 10000) {
+        confetti(70);
+        bigWinBanner('MEGA WIN!', '+' + fmtN(a) + ' 🪙 · x' + mult.toFixed(1), 'mega');
+        flash('rgba(255, 196, 0, 0.28)');
+        shake('hard');
+        return;
+      }
+      if (mult >= 10 || a >= 2500) {
+        confetti(45);
+        bigWinBanner('BIG WIN!', '+' + fmtN(a) + ' 🪙', 'big');
+        flash('rgba(255, 214, 90, 0.2)');
+        return;
+      }
+      if (mult >= 5 || a >= 800) {
+        confetti(22);
+        bigWinBanner('КРУПНЫЙ ВЫИГРЫШ', '+' + fmtN(a) + ' 🪙', 'normal');
+        return;
+      }
+      if (window.SFX && window.SFX.coin) window.SFX.coin();
+    } catch (_) {}
+  }
+
+  return { confetti, bigWinBanner, shake, flash, onWin };
 })();
 
 
@@ -1858,10 +2101,11 @@ window.AppState = (function () {
       state.level += 1;
       leveledUp = true;
     }
-    if (leveledUp && window.UI) {
+    if (leveledUp) {
       const r = getRank();
-      window.UI.toast(`🎉 Уровень интеллекта ${state.level}! Ранг: ${r.icon} ${r.title}`, 'gold');
-      if (window.SFX) window.SFX.jackpot();
+      if (window.UI) window.UI.toast(`🎉 Уровень интеллекта ${state.level}! Ранг: ${r.icon} ${r.title}`, 'gold');
+      if (window.SFX && window.SFX.levelup) window.SFX.levelup(); else if (window.SFX) window.SFX.jackpot();
+      if (window.FX) window.FX.confetti(30);
     }
   }
 
@@ -2049,6 +2293,7 @@ window.AppState = (function () {
 
     state.coins += totalCredited;
     unsyncedCoinDelta += totalCredited;
+    if (window.FX && window.FX.onWin) { try { window.FX.onWin(totalCredited, multiplier, jackpotWonAmount); } catch (_) {} }
     state.stats.totalWon += totalCredited;
     if (totalCredited > state.stats.biggestWin) state.stats.biggestWin = totalCredited;
     if (multiplier > state.stats.biggestMult) state.stats.biggestMult = Number(multiplier.toFixed(2));
@@ -3631,6 +3876,12 @@ window.BrainTasks = (function () {
 // Shared Casino Core: Registry, Deck Helpers, Bet Panel, Toasts & Quick-Earn Modal
 window.UI = {
   toast(msg, type = 'win') {
+    try {
+      if (window.BR_HAPTIC) {
+        if (type === 'win' || type === 'gold') window.BR_HAPTIC.notification('success');
+        else if (type === 'loss') window.BR_HAPTIC.notification('error');
+      }
+    } catch (_) {}
     const wrap = document.getElementById('toast-container');
     if (!wrap) return;
     const el = document.createElement('div');
@@ -3732,7 +3983,18 @@ window.GameCore = (function () {
   }
 
   function fmt(n) {
-    return Math.round(Number(n) || 0).toLocaleString('ru-RU');
+    const num = Number(n) || 0;
+    const sign = num < 0 ? '-' : '';
+    let abs = Math.abs(num);
+    const units = ['', 'к', 'млн', 'млрд', 'трлн'];
+    let u = 0;
+    while (abs >= 1000 && u < units.length - 1) { abs /= 1000; u++; }
+    while (abs >= 999.5 && u < units.length - 1) { abs /= 1000; u++; }
+    if (u === 0) return sign + String(Math.round(abs));
+    const s = abs >= 100 ? String(Math.round(abs))
+      : abs >= 10 ? String(Math.round(abs * 10) / 10).replace('.', ',')
+      : String(Math.round(abs * 100) / 100).replace('.', ',');
+    return sign + s + ' ' + units[u];
   }
 
   // Quick Math Rescue Modal right inside any casino game!
@@ -4207,6 +4469,7 @@ window.GameCore = (function () {
         const win = AppState.winPayout(Math.round(currentBet * cashoutMult), cashoutMult);
         if (cashoutMult >= 5) AppState.unlockAchievement('rocket_5x');
         SFX.win();
+        if (window.FX) window.FX.flash('rgba(0,230,118,0.16)');
         UI.toast(`🚀 Вывод ${cashoutMult.toFixed(2)}x: +${GameCore.fmt(win)} 🪙!`, 'win');
         syncLiveControlState();
       }
@@ -4258,6 +4521,7 @@ window.GameCore = (function () {
           renderHist();
           if (!cashedOut) {
             SFX.boom();
+            if (window.FX) { window.FX.shake('hard'); window.FX.flash('rgba(255,80,80,0.3)'); }
           }
           syncLiveControlState();
           drawScene();
@@ -4525,6 +4789,7 @@ window.GameCore = (function () {
           active = false;
           gameOver = true;
           SFX.boom();
+          if (window.FX) { window.FX.shake('hard'); window.FX.flash('rgba(255,61,113,0.3)'); }
           UI.toast('💥 Нарвались на мину! Ставка сгорела.', 'loss');
           renderBoard();
           renderBet();
@@ -5157,6 +5422,7 @@ window.GameCore = (function () {
             if (payout > 0) {
               AppState.winPayout(payout, payout / sum);
               SFX.win();
+              if (window.FX && payout > 0) window.FX.flash('rgba(255,214,90,0.2)');
               statusEl.innerHTML = `🎉 Выпало <b class="num">${resultNum}</b>! Выигрыш: <span style="color:var(--emerald)">+${GameCore.fmt(payout)} 🪙</span>`;
               UI.toast(`🎡 Выпало ${resultNum}! Выигрыш +${GameCore.fmt(payout)} 🪙`, 'win');
             } else {
@@ -5490,6 +5756,7 @@ window.GameCore = (function () {
 
       function doSpin(betFromInput) {
         if (spinning) return;
+        try { if (window.SFX) window.SFX.spin(); } catch (_) {}
         const isFS = freeSpins > 0;
         const bet = isFS ? freeSpinBaseBet : betFromInput;
         if (!isFS) {
@@ -6082,6 +6349,7 @@ window.GameCore = (function () {
           active = false;
           ended = true;
           SFX.boom();
+          if (window.FX) { window.FX.shake('hard'); window.FX.flash('rgba(255,61,113,0.3)'); }
           UI.toast('💥 Ловушка! Башня обрушилась.', 'loss');
           renderTower();
           renderBet();
@@ -10031,7 +10299,625 @@ window.SocialArena = (function () {
     refreshIfVisible();
   }
 
+
+  // =====================================================
+  // BRAINROYALE · FIREBASE (друзья-казино без сервера)
+  // Вставьте свою конфигурацию Firebase в BR_FB_CONFIG ниже.
+  // Инструкция: см. FIREBASE_SETUP.md. Если конфиг пустой или
+  // Firebase недоступен — игра работает в автономном режиме как раньше.
+  // =====================================================
+  const BR_FB_CONFIG = {
+    apiKey: 'AIzaSyCl8zEp96koAWQBR1xND6afPpBaWZfTC-c',
+    authDomain: 'brainroyale-499af.firebaseapp.com',
+    projectId: 'brainroyale-499af',
+    storageBucket: 'brainroyale-499af.firebasestorage.app',
+    messagingSenderId: '844380685928',
+    appId: '1:844380685928:web:89f4a4f7feb69dedbc1ddd'
+  };
+
+  const BR_FB_ENABLED = Boolean(BR_FB_CONFIG.apiKey && BR_FB_CONFIG.projectId && window.firebase);
+  const fbState = { db: null, authReady: null, me: null };
+
+  function brFbRoomNormalize(code) {
+    const clean = String(code || '').toUpperCase().replace(/[^A-Z0-9А-ЯЁ_-]/g, '').slice(0, 14);
+    return clean || 'MAIN';
+  }
+  function brFbId() {
+    const authUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || (hashFallback && hashFallback.user) || null;
+    if (authUser && authUser.id) return 'tg_' + String(authUser.id);
+    return getLocalDemoIdentity().id;
+  }
+  function brFbName() {
+    const authUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || (hashFallback && hashFallback.user) || null;
+    if (authUser) return String(authUser.first_name || authUser.username || 'Игрок').slice(0, 30);
+    return getLocalDemoIdentity().firstName;
+  }
+  function brFbB64(s) {
+    try { return btoa(unescape(encodeURIComponent(String(s)))); } catch (e) { return String(s); }
+  }
+  function fbTs() { return Date.now(); }
+
+  async function brFbInit() {
+    if (!BR_FB_ENABLED) return false;
+    if (fbState.authReady) return fbState.authReady;
+    fbState.authReady = (async () => {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(BR_FB_CONFIG);
+        fbState.db = firebase.firestore();
+        await firebase.auth().signInAnonymously();
+        return true;
+      } catch (e) {
+        console.warn('[fb] init failed', e);
+        return false;
+      }
+    })();
+    return fbState.authReady;
+  }
+
+  async function brFbFeedAdd(roomCode, text, type) {
+    try {
+      await fbState.db.collection('feed').add({ roomCode, text, type: type || 'info', time: nowTimeStr(), ts: fbTs() });
+    } catch (e) { console.warn('[fb] feed add failed', e); }
+  }
+  async function brFbFeedList(roomCode, limit) {
+    try {
+      const snap = await fbState.db.collection('feed').where('roomCode', '==', roomCode).get();
+      const items = snap.docs.map((d) => d.data()).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, limit || 15);
+      return items.map((x) => ({ time: x.time || '', text: x.text || '' }));
+    } catch (e) { console.warn('[fb] feed list failed', e); return []; }
+  }
+  async function brFbPlayersList(roomCode) {
+    try {
+      const snap = await fbState.db.collection('profiles').where('roomCode', '==', roomCode).get();
+      const list = snap.docs.map((d) => d.data()).sort((a, b) => (b.coins || 0) - (a.coins || 0));
+      return list.map((p, idx) => ({ ...p, title: computeRoastTitle(p, idx) }));
+    } catch (e) { console.warn('[fb] players query failed', e); return []; }
+  }
+  async function brFbPool(delta) {
+    const ref = fbState.db.doc('arena/MAIN');
+    const res = await fbState.db.runTransaction(async (tx) => {
+      const doc = await tx.get(ref);
+      const cur = doc.exists ? (doc.data().pool || 0) : 5000;
+      const next = Math.max(0, Math.round(cur + (delta || 0)));
+      if (doc.exists) tx.update(ref, { pool: next }); else tx.set(ref, { pool: next });
+      return next;
+    });
+    return res;
+  }
+
+  async function brFbHandleSync(payload) {
+    const okAuth = await brFbInit();
+    if (!okAuth) return null;
+    const st = AppState.get();
+    // ВАЖНО: дельты уже вычитаны в syncNow() и приезжают в payload — не потребляем их повторно!
+    const delta = {
+      coinsDelta: (payload && payload.coinsDelta) || 0,
+      jpDelta: (payload && payload.jpDelta) || 0
+    };
+    const uid = brFbId();
+    const name = brFbName();
+    const startParam = (payload && payload.startParam) || '';
+    const requestedRoom = startParam ? brFbRoomNormalize(startParam) : null;
+    const ref = fbState.db.doc('profiles/' + uid);
+
+    const meProfile = await fbState.db.runTransaction(async (tx) => {
+      const doc = await tx.get(ref);
+      const vaultLock = (st.upgrades && st.upgrades.vault_lock) || 0;
+      const stats = (payload && payload.stats) || {};
+      if (doc.exists) {
+        const d = doc.data();
+        const roomCode = requestedRoom || brFbRoomNormalize(d.roomCode);
+        const coins = Math.max(0, Math.round((d.coins || 0) + (delta.coinsDelta || 0)));
+        const next = {
+          id: uid, name, roomCode,
+          coins,
+          level: payload.level || st.level || 1,
+          xp: payload.xp || st.xp || 0,
+          prestigeCores: payload.prestigeCores || st.prestigeCores || 0,
+          vaultLock, robsOk: d.robsOk || 0,
+          tasksSolved: stats.tasksSolved || d.tasksSolved || 0,
+          biggestWin: stats.biggestWin || d.biggestWin || 0,
+          updatedAt: fbTs()
+        };
+        tx.update(ref, next);
+        return next;
+      }
+      const coins = Math.max(0, Math.round(st.coins + (delta.coinsDelta || 0)));
+      const roomCode = requestedRoom || 'MAIN';
+      const next = {
+        id: uid, name, roomCode, coins,
+        level: st.level || 1, xp: st.xp || 0, prestigeCores: st.prestigeCores || 0,
+        vaultLock, robsOk: 0, tasksSolved: (st.stats && st.stats.tasksSolved) || 0,
+        biggestWin: (st.stats && st.stats.biggestWin) || 0, createdAt: fbTs(), updatedAt: fbTs()
+      };
+      tx.set(ref, next);
+      return next;
+    });
+
+    const pool = await brFbPool(delta.jpDelta || 0);
+
+    // Кормим ленту событиями из игры
+    const ev = payload && payload.gameEvent;
+    if (ev) {
+      if (ev.type === 'big_win' && (ev.multiplier || 0) >= 10) {
+        await brFbFeedAdd(meProfile.roomCode, '🎰 ' + name + ' занёс +' + GameCore.fmt(ev.amount || 0) + ' 🪙 (x' + (ev.multiplier || 0).toFixed(1) + ')!', 'big_win');
+      } else if (ev.type === 'wipeout') {
+        await brFbFeedAdd(meProfile.roomCode, '💀 ' + name + ' пошёл ва-банк и обнулился в 0 🪙!', 'wipeout');
+      }
+    }
+
+    const [playersRaw, feed] = await Promise.all([
+      brFbPlayersList(meProfile.roomCode),
+      brFbFeedList(meProfile.roomCode, 15)
+    ]);
+    const pageUrl = window.location.protocol === 'file:' ? '' : window.location.href.split('?')[0].split('#')[0];
+    const room = meProfile.roomCode;
+    const inviteUrl = pageUrl + (room && room !== 'MAIN' ? ('?chat=' + encodeURIComponent(room)) : '');
+    const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино!');
+    const shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl || pageUrl) + '&text=' + shareText;
+    const pub = { ...meProfile, title: computeRoastTitle(meProfile, 0) };
+
+    return {
+      ok: true,
+      user: pub,
+      roomCode: room,
+      roomName: room === 'MAIN' ? 'Тусовка Друзей' : room,
+      shareUrl,
+      inviteUrl,
+      players: playersRaw,
+      feed,
+      jackpotPool: pool,
+      botUsername: '',
+      demoMode: false,
+      externalNotice: null
+    };
+  }
+
+  async function brFbTransfer(fromId, toId, amount, feedText) {
+    const amt = Math.max(1, Math.floor(amount || 0));
+    const fromRef = fbState.db.doc('profiles/' + fromId);
+    const toRef = fbState.db.doc('profiles/' + toId);
+    return fbState.db.runTransaction(async (tx) => {
+      const fromDoc = await tx.get(fromRef);
+      const toDoc = await tx.get(toRef);
+      const fromCoins = fromDoc.exists ? (fromDoc.data().coins || 0) : 0;
+      if (fromCoins < amt) throw new Error('NOT_ENOUGH_COINS');
+      const nextFrom = fromCoins - amt;
+      const nextTo = (toDoc.exists ? (toDoc.data().coins || 0) : 0) + amt;
+      tx.update(fromRef, { coins: nextFrom, updatedAt: fbTs() });
+      if (toDoc.exists) tx.update(toRef, { coins: nextTo, updatedAt: fbTs() }); else tx.set(toRef, { id: toId, name: toId, roomCode: 'MAIN', coins: nextTo, createdAt: fbTs(), updatedAt: fbTs() });
+      return { nextFrom, nextTo };
+    }).then(async (r) => { if (feedText) { const room = await brFbMyRoom(); if (room) await brFbFeedAdd(room, feedText, 'transfer'); } return r; });
+  }
+  async function brFbMyRoom() {
+    const doc = await fbState.db.doc('profiles/' + brFbId()).get();
+    return doc.exists ? brFbRoomNormalize(doc.data().roomCode) : 'MAIN';
+  }
+
+  async function brFbHandleRob(body) {
+    const okAuth = await brFbInit(); if (!okAuth) return null;
+    const uid = brFbId();
+    const name = brFbName();
+    const targetId = String(body.targetId || '');
+    const meRef = fbState.db.doc('profiles/' + uid);
+    const tRef = fbState.db.doc('profiles/' + targetId);
+    const result = await fbState.db.runTransaction(async (tx) => {
+      const meDoc = await tx.get(meRef); const tDoc = await tx.get(tRef);
+      if (!tDoc.exists) throw new Error('TARGET_NOT_FOUND');
+      const me = meDoc.data(); const target = tDoc.data();
+      const myCoins = me.coins || 0;
+      if (body.success) {
+        const lock = target.vaultLock || 0;
+        const pct = Math.max(0.06, 0.16 - lock * 0.025);
+        const stolen = Math.max(50, Math.min(2500, Math.round((target.coins || 0) * pct)));
+        const nextMe = myCoins + stolen;
+        tx.update(meRef, { coins: nextMe, robsOk: (me.robsOk || 0) + 1, updatedAt: fbTs() });
+        tx.update(tRef, { coins: Math.max(0, (target.coins || 0) - stolen), updatedAt: fbTs() });
+        return { myCoins: nextMe, stolen, fine: 0 };
+      }
+      const fine = Math.min(myCoins, Math.max(40, Math.round(myCoins * 0.12)));
+      tx.update(meRef, { coins: myCoins - fine, updatedAt: fbTs() });
+      tx.update(tRef, { coins: (target.coins || 0) + fine, updatedAt: fbTs() });
+      return { myCoins: myCoins - fine, stolen: 0, fine };
+    });
+    const room = await brFbMyRoom();
+    const targetName = escapeHtml(String((await fbState.db.doc('profiles/' + targetId).get()).data().name || targetId));
+    if (body.success) await brFbFeedAdd(room, '🐀 ' + name + ' вскрыл сейф ' + targetName + ' и унёс +' + GameCore.fmt(result.stolen) + ' 🪙!', 'rob');
+    else await brFbFeedAdd(room, '🚔 ' + name + ' попался на взломе ' + targetName + ' (' + (body.reasonLabel || '') + ') — штраф -' + GameCore.fmt(result.fine) + ' 🪙!', 'rob');
+    return { ok: true, myCoins: result.myCoins, stolen: result.stolen, fine: result.fine };
+  }
+
+  async function brFbHandleGift(body) {
+    const okAuth = await brFbInit(); if (!okAuth) return null;
+    const amt = Math.floor(Number(body.amount) || 0);
+    const uid = brFbId();
+    const name = brFbName();
+    if (amt < 10) return { ok: false, error: 'Минимум 10 🪙!' };
+    try {
+      const r = await brFbTransfer(uid, String(body.targetId || ''), amt,
+        '💸 ' + name + ' перевёл ' + GameCore.fmt(amt) + ' 🪙 — «' + String(body.note || '').slice(0, 50) + '»');
+      return { ok: true, myCoins: r.nextFrom };
+    } catch (e) {
+      return { ok: false, error: e.message === 'NOT_ENOUGH_COINS' ? 'Недостаточно монет!' : 'Ошибка перевода' };
+    }
+  }
+
+  async function brFbHandleBeg() {
+    const okAuth = await brFbInit(); if (!okAuth) return null;
+    const uid = brFbId();
+    const name = brFbName();
+    const room = await brFbMyRoom();
+    const meRef = fbState.db.doc('profiles/' + uid);
+    const beg = await fbState.db.runTransaction(async (tx) => {
+      const doc = await tx.get(meRef);
+      const d = doc.exists ? doc.data() : {};
+      const now = fbTs();
+      if (d.lastBegAt && now - d.lastBegAt < 30 * 60 * 1000) {
+        const waitMin = Math.ceil((30 * 60 * 1000 - (now - d.lastBegAt)) / 60000);
+        throw new Error('BEG_COOLDOWN:' + waitMin);
+      }
+      tx.update(meRef, { lastBegAt: now, updatedAt: fbTs() });
+      return true;
+    }).catch((e) => e);
+    if (beg instanceof Error) {
+      const m = /BEG_COOLDOWN:(\d+)/.exec(beg.message || '');
+      return { ok: false, error: 'Подожди ' + (m ? m[1] : 'чуть-чуть') + ' мин до следующей просьбы!' };
+    }
+    await fbState.db.collection('begRequests').add({ roomCode: room, fromId: uid, fromName: name, amount: 120, status: 'open', ts: fbTs(), expiresAt: fbTs() + 48 * 3600 * 1000 });
+    await brFbFeedAdd(room, '🥺 ' + name + ' клянчит на дошик: «скинь 120 🪙, братан!»', 'beg');
+    const doc = await fbState.db.doc('profiles/' + uid).get();
+    return { ok: true, myCoins: doc.data().coins || 0, message: '🥠 Просьба отправлена в тусовку! Друзья увидят её в игре.' };
+  }
+
+  async function brFbHandleRoom(body) {
+    const okAuth = await brFbInit(); if (!okAuth) return null;
+    const code = brFbRoomNormalize(body.roomCode);
+    const uid = brFbId();
+    await fbState.db.doc('profiles/' + uid).set({ roomCode: code, updatedAt: fbTs() }, { merge: true });
+    try { await fbState.db.doc('rooms/' + code).set({ code, updatedAt: fbTs() }, { merge: true }); } catch (e) {}
+    return { ok: true, roomCode: code };
+  }
+
+  async function brFbHandleDuel(body) {
+    const okAuth = await brFbInit(); if (!okAuth) return null;
+    const uid = brFbId();
+    const name = brFbName();
+    const targetId = String(body.targetId || '');
+    const stake = Math.floor(Number(body.stake) || 0);
+    if (stake <= 0) return { ok: false, error: 'Ставка должна быть больше нуля!' };
+    const meRef = fbState.db.doc('profiles/' + uid);
+    const tRef = fbState.db.doc('profiles/' + targetId);
+    const targetDoc = await tRef.get();
+    if (!targetDoc.exists) return { ok: false, error: 'Игрок не найден в тусовке' };
+    const targetName = targetDoc.data().name || targetId;
+    const task = BrainTasks.generate('mix', stake >= 1000 ? 2 : 1, { choiceOnly: true });
+    const myCoinsAfter = await fbState.db.runTransaction(async (tx) => {
+      const meDoc = await tx.get(meRef);
+      const me = meDoc.data();
+      const coins = me.coins || 0;
+      if (coins < stake) throw new Error('NOT_ENOUGH_COINS');
+      tx.update(meRef, { coins: coins - stake, updatedAt: fbTs() });
+      tx.set(fbState.db.collection('duels').doc(), {
+        roomCode: me.roomCode || 'MAIN',
+        fromId: uid, fromName: name, toId: targetId, toName: targetName,
+        stake, pot: stake * 2,
+        question: task.question, options: task.options, answerB64: brFbB64(task.answer),
+        status: 'pending', fromResult: null, toResult: null, winner: null,
+        createdAt: fbTs(), expiresAt: fbTs() + 72 * 3600 * 1000
+      });
+      return coins - stake;
+    }).catch((e) => (e.message === 'NOT_ENOUGH_COINS' ? null : Promise.reject(e)));
+    if (myCoinsAfter === null) return { ok: false, error: 'Недостаточно монет для этой ставки!' };
+    const room = await brFbMyRoom();
+    await brFbFeedAdd(room, '⚔️ ' + name + ' вызвал ' + targetName + ' на дуэль на ' + GameCore.fmt(stake) + ' 🪙!', 'duel');
+    return { ok: true, myCoins: myCoinsAfter, instantResult: null, message: '⚔️ Вызов отправлен! ' + targetName + ' увидит его в игре.' };
+  }
+
+  async function brFbDuelList() {
+    const okAuth = await brFbInit(); if (!okAuth) return { incoming: [], outgoing: [], openBegs: [] };
+    const uid = brFbId();
+    const room = await brFbMyRoom();
+    const [inSnap, outSnap, begSnap] = await Promise.all([
+      fbState.db.collection('duels').where('toId', '==', uid).where('status', '==', 'pending').get(),
+      fbState.db.collection('duels').where('fromId', '==', uid).where('status', '==', 'pending').get(),
+      fbState.db.collection('begRequests').where('roomCode', '==', room).where('status', '==', 'open').get()
+    ]);
+    return {
+      incoming: inSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt),
+      outgoing: outSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt),
+      openBegs: begSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).filter((b) => b.fromId !== uid).sort((a, b) => b.ts - a.ts)
+    };
+  }
+
+  async function brFbDuelAccept(docId) {
+    const uid = brFbId();
+    const ref = fbState.db.doc('duels/' + docId);
+    const meRef = fbState.db.doc('profiles/' + uid);
+    return fbState.db.runTransaction(async (tx) => {
+      const duelDoc = await tx.get(ref);
+      const meDoc = await tx.get(meRef);
+      if (!duelDoc.exists || duelDoc.data().status !== 'pending') throw new Error('DUEL_NOT_PENDING');
+      const me = meDoc.data();
+      const stake = duelDoc.data().stake;
+      if ((me.coins || 0) < stake) throw new Error('NOT_ENOUGH_COINS');
+      tx.update(meRef, { coins: (me.coins || 0) - stake, updatedAt: fbTs() });
+      tx.update(ref, { status: 'active', acceptedAt: fbTs() });
+      return { ...duelDoc.data(), docId };
+    });
+  }
+  async function brFbDuelDecline(docId) {
+    const uid = brFbId();
+    const ref = fbState.db.doc('duels/' + docId);
+    const fromRef = fbState.db.doc('profiles/placeholder');
+    await fbState.db.runTransaction(async (tx) => {
+      const duelDoc = await tx.get(ref);
+      if (!duelDoc.exists || duelDoc.data().status !== 'pending') return;
+      const d = duelDoc.data();
+      tx.update(ref, { status: 'declined' });
+      const fRef = fbState.db.doc('profiles/' + d.fromId);
+      const fDoc = await tx.get(fRef);
+      if (fDoc.exists) tx.update(fRef, { coins: (fDoc.data().coins || 0) + d.stake, updatedAt: fbTs() });
+    });
+    const room = await brFbMyRoom();
+    await brFbFeedAdd(room, '🛡️ Дуэль отклонена. Ставка возвращена.', 'duel');
+    return { ok: true };
+  }
+  async function brFbDuelCancel(docId) {
+    const uid = brFbId();
+    const ref = fbState.db.doc('duels/' + docId);
+    await fbState.db.runTransaction(async (tx) => {
+      const duelDoc = await tx.get(ref);
+      if (!duelDoc.exists || duelDoc.data().status !== 'pending') return;
+      const d = duelDoc.data();
+      if (d.fromId !== uid) throw new Error('NOT_YOUR_DUEL');
+      tx.update(ref, { status: 'cancelled' });
+      const fRef = fbState.db.doc('profiles/' + uid);
+      const fDoc = await tx.get(fRef);
+      if (fDoc.exists) tx.update(fRef, { coins: (fDoc.data().coins || 0) + d.stake, updatedAt: fbTs() });
+    });
+    return { ok: true };
+  }
+  async function brFbDuelSubmitAnswer(docId, chosenB64, timeMs) {
+    const uid = brFbId();
+    const name = brFbName();
+    const ref = fbState.db.doc('duels/' + docId);
+    const room = await brFbMyRoom();
+    await fbState.db.runTransaction(async (tx) => {
+      const duelDoc = await tx.get(ref);
+      if (!duelDoc.exists) throw new Error('DUEL_NOT_FOUND');
+      const d = duelDoc.data();
+      if (d.status !== 'active') throw new Error('DUEL_NOT_ACTIVE');
+      const correct = chosenB64 === d.answerB64;
+      const result = { ok: correct, timeMs: Math.max(0, Math.floor(timeMs || 0)), at: fbTs() };
+      const isFrom = d.fromId === uid;
+      const next = isFrom ? { fromResult: result } : { toResult: result };
+      const merged = { ...d, ...next };
+      // Если обе попытки есть — решаем исход
+      if (merged.fromResult && merged.toResult) {
+        const f = merged.fromResult, t = merged.toResult;
+        let winner = 'draw';
+        if (f.ok && t.ok) winner = (f.timeMs <= t.timeMs) ? 'from' : 'to';
+        else if (f.ok) winner = 'from';
+        else if (t.ok) winner = 'to';
+        merged.status = 'resolved';
+        merged.winner = winner;
+        tx.update(ref, { ...next, status: 'resolved', winner });
+        if (winner !== 'draw') {
+          const winnerId = winner === 'from' ? d.fromId : d.toId;
+          const wRef = fbState.db.doc('profiles/' + winnerId);
+          const wDoc = await tx.get(wRef);
+          if (wDoc.exists) tx.update(wRef, { coins: (wDoc.data().coins || 0) + d.pot, updatedAt: fbTs() });
+        } else {
+          for (const pid of [d.fromId, d.toId]) {
+            const pRef = fbState.db.doc('profiles/' + pid);
+            const pDoc = await tx.get(pRef);
+            if (pDoc.exists) tx.update(pRef, { coins: (pDoc.data().coins || 0) + d.stake, updatedAt: fbTs() });
+          }
+        }
+      } else {
+        tx.update(ref, next);
+      }
+    });
+    const duelAfter = await ref.get();
+    const d = duelAfter.data();
+    if (d.status === 'resolved') {
+      const winnerName = d.winner === 'from' ? d.fromName : d.winner === 'to' ? d.toName : null;
+      await brFbFeedAdd(room, winnerName ? ('🏆 ' + winnerName + ' победил в дуэли на ' + GameCore.fmt(d.stake) + ' 🪙!') : '🤝 Дуэль завершилась ничьей — ставки возвращены.', 'duel');
+    }
+    const meDoc = await fbState.db.doc('profiles/' + uid).get();
+    return { ok: true, myCoins: meDoc.exists ? meDoc.data().coins : 0, resolved: d.status === 'resolved', winner: d.winner || null };
+  }
+  async function brFbBegGive(docId) {
+    const uid = brFbId();
+    const name = brFbName();
+    const room = await brFbMyRoom();
+    const ref = fbState.db.doc('begRequests/' + docId);
+    await fbState.db.runTransaction(async (tx) => {
+      const reqDoc = await tx.get(ref);
+      if (!reqDoc.exists || reqDoc.data().status !== 'open') return;
+      const d = reqDoc.data();
+      const amt = d.amount || 120;
+      const fromRef = fbState.db.doc('profiles/' + uid);
+      const toRef = fbState.db.doc('profiles/' + d.fromId);
+      const fromDoc = await tx.get(fromRef);
+      const toDoc = await tx.get(toRef);
+      const myCoins = fromDoc.exists ? (fromDoc.data().coins || 0) : 0;
+      if (myCoins < amt) throw new Error('NOT_ENOUGH_COINS');
+      tx.update(fromRef, { coins: myCoins - amt, updatedAt: fbTs() });
+      tx.update(toRef, { coins: (toDoc.exists ? (toDoc.data().coins || 0) : 0) + amt, updatedAt: fbTs() });
+      tx.update(ref, { status: 'done', giverId: uid, giverName: name, resolvedAt: fbTs() });
+    });
+    await brFbFeedAdd(room, '💛 ' + name + ' подкинул +120 🪙 на дошик!', 'beg');
+    const meDoc = await fbState.db.doc('profiles/' + uid).get();
+    return { ok: true, myCoins: meDoc.exists ? meDoc.data().coins : 0 };
+  }
+
+  window.BR_FB = {
+    enabled: BR_FB_ENABLED,
+    call: async function (endpoint, body) {
+      if (!BR_FB_ENABLED) return null;
+      try {
+        switch (endpoint) {
+          case '/api/sync': return await brFbHandleSync(body || {});
+          case '/api/rob': return await brFbHandleRob(body || {});
+          case '/api/duel': return await brFbHandleDuel(body || {});
+          case '/api/gift': return await brFbHandleGift(body || {});
+          case '/api/room': return await brFbHandleRoom(body || {});
+          case '/api/beg': return await brFbHandleBeg();
+          default: return null;
+        }
+      } catch (e) {
+        console.warn('[fb] call', endpoint, e);
+        if (e && e.message === 'NOT_ENOUGH_COINS') return { ok: false, error: 'Недостаточно монет!' };
+        return null;
+      }
+    },
+    listInbox: brFbDuelList,
+    acceptDuel: brFbDuelAccept,
+    declineDuel: brFbDuelDecline,
+    cancelDuel: brFbDuelCancel,
+    submitAnswer: brFbDuelSubmitAnswer,
+    giveBeg: brFbBegGive
+  };
+
+  function fbQuestionBtoa(a) { return brFbB64(a); }
+
+  // Входящие вызовы и просьбы в табе «Тусовка»
+  window.BR_FB_RENDER_INBOX = async function (box) {
+    try {
+      if (!window.BR_FB.enabled) { box.innerHTML = ''; return; }
+      const data = await window.BR_FB.listInbox();
+      let html = '';
+      for (const d of data.incoming) {
+        html += '<div class="fb-duel-card" style="border:1px solid rgba(167,139,250,.45);background:rgba(139,92,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#c4b5fd;">⚔️ ' + escapeHtml(d.fromName) + ' вызывает на дуэль!</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка: <b class="num">' + GameCore.fmt(d.stake) + ' 🪙</b> — победитель забирает банк ×2</div></div>'
+          + '<button class="btn btn-emerald" data-accept="' + d.docId + '" style="padding:7px 14px;">Принять</button>'
+          + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить</button>'
+          + '</div>';
+      }
+      for (const d of data.outgoing) {
+        html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⏳ Ждём ответа: ' + escapeHtml(d.toName) + '</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка заморожена: ' + GameCore.fmt(d.stake) + ' 🪙</div></div>'
+          + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
+          + '</div>';
+      }
+      for (const b of data.openBegs) {
+        html += '<div class="fb-beg-card" style="border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#fcd34d;">🥺 ' + escapeHtml(b.fromName) + ' просит на дошик</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Поделишься ' + GameCore.fmt(b.amount || 120) + ' 🪙?</div></div>'
+          + '<button class="btn btn-gold" data-give="' + b.docId + '" style="padding:7px 14px;">💛 Дать</button>'
+          + '</div>';
+      }
+      box.innerHTML = html;
+
+      box.querySelectorAll('[data-accept]').forEach((btn) => {
+        btn.onclick = async () => {
+          btn.disabled = true;
+          try {
+            const duel = await window.BR_FB.acceptDuel(btn.dataset.accept);
+            openFbDuelPlayModal(duel);
+          } catch (e) {
+            SFX.wrong();
+            UI.toast(e.message === 'NOT_ENOUGH_COINS' ? 'Не хватает монет на ставку!' : 'Вызов уже неактуален.', 'loss');
+            await syncNow();
+          }
+        };
+      });
+      box.querySelectorAll('[data-decline]').forEach((btn) => {
+        btn.onclick = async () => {
+          btn.disabled = true;
+          await window.BR_FB.declineDuel(btn.dataset.decline);
+          SFX.tap();
+          await syncNow();
+        };
+      });
+      box.querySelectorAll('[data-cancel]').forEach((btn) => {
+        btn.onclick = async () => {
+          btn.disabled = true;
+          await window.BR_FB.cancelDuel(btn.dataset.cancel);
+          SFX.tap();
+          UI.toast('Ставка возвращена.', 'gold');
+          await syncNow();
+        };
+      });
+      box.querySelectorAll('[data-give]').forEach((btn) => {
+        btn.onclick = async () => {
+          btn.disabled = true;
+          try {
+            const r = await window.BR_FB.giveBeg(btn.dataset.give);
+            if (r && r.ok) { SFX.win(); AppState.setExactCoinsFromAction(r.myCoins); UI.toast('💛 Ты добрый самурай! +репутация в тусовке', 'win'); }
+            else UI.toast('Не вышло — возможно, просьба уже закрыта.', 'loss');
+          } catch (e) {
+            SFX.wrong();
+            UI.toast(e.message === 'NOT_ENOUGH_COINS' ? 'Не хватает монет!' : 'Не вышло.', 'loss');
+          }
+          await syncNow();
+        };
+      });
+    } catch (e) {
+      console.warn('[fb] inbox render failed', e);
+      box.innerHTML = '';
+    }
+  };
+
+  // Модалка ответа на дуэль (общая задача из вызова)
+  function openFbDuelPlayModal(duel) {
+    SFX.tap();
+    const startedAt = performance.now();
+    UI.openModal(
+      '<div style="font-weight:900;font-size:16px;color:var(--purple-light);margin-bottom:6px;">⚔️ Дуэль против ' + escapeHtml(duel.fromName) + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Ставка ' + GameCore.fmt(duel.stake) + ' 🪙 · Банк ×2. Первый верный и быстрый забирает всё (или быстрее решаешь — получаешь банк)!</div>'
+      + '<div class="task-question-box" style="margin:8px 0 12px;padding:14px;font-size:18px;">' + duel.question + '</div>'
+      + '<div class="answers-grid" id="fb-duel-opts"></div>'
+    );
+    const grid = document.getElementById('fb-duel-opts');
+    if (!grid) return;
+    let done = false;
+    duel.options.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.onclick = async () => {
+        if (done) return;
+        done = true;
+        UI.closeModal();
+        const timeMs = performance.now() - startedAt;
+        const res = await window.BR_FB.submitAnswer(duel.docId, brFbB64(opt), timeMs);
+        if (res && res.ok) {
+          AppState.setExactCoinsFromAction(res.myCoins);
+          if (res.resolved) {
+            if (res.winner) SFX.jackpot(); else SFX.win();
+            UI.toast(res.winner ? '🏆 Дуэль разрешена! Смотри ленту в тусовке.' : '🤝 Ничья — ставки вернулись.', 'gold');
+          } else {
+            SFX.win();
+            UI.toast('✅ Ответ принят! Ждём соперника.', 'win');
+          }
+        } else {
+          SFX.wrong();
+          UI.toast('Не удалось отправить ответ.', 'loss');
+        }
+        await syncNow();
+      };
+      grid.appendChild(btn);
+    });
+  }
+  function renderFbInbox(container) {
+    const box = container.querySelector('#fb-inbox');
+    if (box && window.BR_FB && window.BR_FB.enabled) window.BR_FB_RENDER_INBOX(box);
+  }
+
+  // Подключаем входящие вызовы/просьбы при отрисовке «Тусовки»
+  window.BR_FB_ATTACH_INBOX = function (container) { renderFbInbox(container); };
+
+
   async function apiPost(endpoint, body) {
+    if (window.BR_FB && typeof window.BR_FB.call === 'function') {
+      const fbRes = await window.BR_FB.call(endpoint, body);
+      if (fbRes !== undefined && fbRes !== null) return fbRes;
+      if (window.BR_FB.enabled) return null;
+    }
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -10454,9 +11340,11 @@ window.SocialArena = (function () {
     const me = boardData.me;
     const players = boardData.players || [];
     const feed = boardData.feed || [];
+    const loading = !boardData.me && !staticMode;
     const st = AppState.get();
 
     main.innerHTML = `
+      <div id="fb-inbox" style="margin-bottom:12px;"></div>
       <div class="hero-banner" style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
           <div>
@@ -10480,7 +11368,7 @@ window.SocialArena = (function () {
 
       <h3 style="margin:0 0 10px; font-size:16px;">👑 Рейтинг тусовки (${players.length})</h3>
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
-        ${players.map((p, idx) => {
+        ${loading ? '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>' : players.map((p, idx) => {
           const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
           const isMe = me && p.id === me.id;
           const canRob = !isMe && p.coins >= 200;
@@ -10516,7 +11404,8 @@ window.SocialArena = (function () {
 
       <h3 style="margin:0 0 10px; font-size:16px;">📢 Живая лента событий</h3>
       <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:12px; margin-bottom:18px; display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;">
-        ${feed.length === 0
+        ${loading ? '<div class="skeleton-card" style="height:110px; margin:0;"></div>'
+          : feed.length === 0
           ? `<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:12px;">Пока тихо — вызови соперника на дуэль ⚔️ или взломай его сейф 🐀!</div>`
           : feed.map((item) => `
               <div style="font-size:12.5px; line-height:1.45; padding-bottom:7px; border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -10527,6 +11416,8 @@ window.SocialArena = (function () {
         }
       </div>
     `;
+
+    if (window.BR_FB_ATTACH_INBOX) window.BR_FB_ATTACH_INBOX(main);
 
     const invBtn = main.querySelector('#soc-invite');
     if (invBtn) {
@@ -10641,6 +11532,7 @@ window.App = (function () {
   let currentTab = 'lobby'; // lobby | earn | lab | profile
   let activeGame = null;    // game object when playing
   let lobbyFilter = 'all';
+  let lobbySearch = '';
 
   const AUTO_SPIN_GAME_IDS = new Set([
     'mineslot', 'olympus', 'doghouse', 'bonanza', 'bookofra',
@@ -10715,6 +11607,7 @@ window.App = (function () {
     }
   }
 
+  let lastBalanceShown = null;
   function updateHeader() {
     const st = AppState.get();
     const rank = AppState.getRank();
@@ -10730,7 +11623,22 @@ window.App = (function () {
     const coreTag = (st.prestigeCores || 0) > 0 ? ` · 💠${st.prestigeCores}` : '';
     if (rankEl) rankEl.textContent = `${rank.icon} Ур.${st.level} · ${rank.title}${coreTag}`;
     if (xpFill) xpFill.style.width = `${pct}%`;
-    if (balEl) balEl.textContent = GameCore.fmt(st.coins);
+    if (balEl) {
+      const cur = st.coins || 0;
+      balEl.textContent = GameCore.fmt(cur);
+      if (lastBalanceShown !== null && cur !== lastBalanceShown && Math.abs(cur - lastBalanceShown) >= 1) {
+        const d = cur - lastBalanceShown;
+        const pill = balEl.closest('.balance-pill');
+        if (pill) {
+          const chip = document.createElement('div');
+          chip.className = 'float-delta' + (d < 0 ? ' neg' : '');
+          chip.textContent = (d > 0 ? '+' : '-') + GameCore.fmt(Math.abs(d)) + ' 🪙';
+          pill.appendChild(chip);
+          setTimeout(() => chip.remove(), 1500);
+        }
+      }
+      lastBalanceShown = cur;
+    }
     if (muteBtn) muteBtn.textContent = st.muted ? '🔇' : '🔊';
     if (apkBtn) apkBtn.style.display = isNativeApk() ? 'none' : 'inline-flex';
 
@@ -10751,6 +11659,7 @@ window.App = (function () {
   }
 
   function navigate(tab) {
+    try { if (window.BR_HAPTIC) window.BR_HAPTIC.impact('light'); } catch (_) {}
     cleanupActiveViews();
     activeGame = null;
     currentTab = tab;
@@ -10822,7 +11731,7 @@ window.App = (function () {
             ${activeGame.mathInfo}
           </p>
           <div style="background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.35); padding:11px; border-radius:12px; font-size:12px; color:var(--gold-light);">
-            🏆 <b>Прогрессивный Мега-Джекпот:</b> 2% от каждой ставки пополняют общий банк казино. Любой выигрыш с множителем <b>x50 и выше</b> мгновенно срывает весь накопленный Джекпот!
+            🏆 <b>Прогрессивный Мега-Джекпот:</b> 1.5% от каждой ставки пополняет общий банк казино. Выигрыш с множителем <b>x50 и выше</b> при ставке от <b>100 🪙</b> срывает долю банка: 10% при ставке 100 и до 100% при ставке от 1000 🪙!
           </div>
         `);
       };
@@ -10845,6 +11754,11 @@ window.App = (function () {
         : lobbyFilter === 'autospin'
           ? allGames.filter((g) => AUTO_SPIN_GAME_IDS.has(g.id))
           : allGames.filter((g) => g.category === lobbyFilter);
+    const escAttr = (s) => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const q = (lobbySearch || '').trim().toLowerCase();
+    const searched = q
+      ? filtered.filter((g) => [g.title, g.desc, g.category, g.id, g.tag || ''].join(' ').toLowerCase().includes(q))
+      : filtered;
 
     const isIosBrowser = /iPhone|iPad|iPod/i.test(navigator.userAgent || '') && !(window.navigator && window.navigator.standalone);
 
@@ -10855,6 +11769,17 @@ window.App = (function () {
           <div style="color:var(--text-primary);">Нажмите внизу Safari <b>«Поделиться ⬆️»</b> → <b>«На экран „Домой“»</b> → <b>«Добавить»</b> (игра сохранится в офлайн-память Айфона!).</div>
         </div>
       ` : ''}
+      ${st.stats.tasksSolved >= 3 ? `
+      <div class="hero-banner hero-compact">
+        <div class="hero-compact-row">
+          <div class="hero-compact-text">🧠 Банк: <b class="num" style="color:var(--gold-light)">${GameCore.fmt(st.coins)} 🪙</b> · решено задач: <b>${st.stats.tasksSolved}</b>${(st.prestigeCores || 0) > 0 ? ` · 💠${st.prestigeCores}` : ''}</div>
+          <div class="hero-compact-actions">
+            <button class="btn btn-emerald btn-sm" id="hero-go-earn">🧠 Умом</button>
+            <button class="btn btn-purple btn-sm" id="hero-go-friends">👥 Тусовка</button>
+          </div>
+        </div>
+      </div>
+      ` : `
       <div class="hero-banner">
         <span class="hero-badge">🧠 0₽ донатов · Валюта только за знания${(st.prestigeCores || 0) > 0 ? ` · 💠 Ядра x${AppState.getPrestigeMultiplier().toFixed(1)}` : ''}</span>
         <h1 class="hero-title">Умное Казино BrainRoyale</h1>
@@ -10868,6 +11793,7 @@ window.App = (function () {
           <button class="btn btn-purple" id="hero-go-friends">👥 Тусовка и Грабежи</button>
         </div>
       </div>
+      `}
 
       <div style="background:linear-gradient(135deg, rgba(255,184,0,0.18), rgba(157,78,221,0.18)); border:1px solid rgba(255,184,0,0.45); border-radius:16px; padding:12px 15px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
         <div>
@@ -10883,22 +11809,30 @@ window.App = (function () {
         </div>
       </div>
 
+      <div class="lobby-search-wrap">
+        <span class="lobby-search-icon">🔍</span>
+        <input type="text" class="lobby-search" id="lobby-search" placeholder="Поиск игры…" autocomplete="off" value="${escAttr(lobbySearch)}" />
+        ${lobbySearch ? '<button class="lobby-search-clear" id="lobby-search-clear" aria-label="Очистить">✕</button>' : ''}
+      </div>
+
       <div class="filter-row">
         ${[
-          ['all', `🔥 Все игры (${allGames.length})`],
-          ['newhits', `⛏️ Новинки: Шахтёр & Слоты (${NEW_HIT_IDS.size})`],
-          ['autospin', `🔄 С Автокруткой (${AUTO_SPIN_GAME_IDS.size})`],
-          ['arcade', '🎰 Все Слоты'],
-          ['fast', '🚀 Быстрые и Иксы'],
+          ['all', `🔥 Все (${allGames.length})`],
+          ['newhits', `⛏️ Новинки (${NEW_HIT_IDS.size})`],
+          ['autospin', `🔄 Авто (${AUTO_SPIN_GAME_IDS.size})`],
+          ['arcade', '🎰 Слоты'],
+          ['fast', '🚀 Быстрые'],
           ['cards', '🃏 Карточные'],
-          ['table', '🎡 Рулетка и Колёса']
+          ['table', '🎡 Рулетка']
         ].map(([id, label]) => `
           <button class="filter-chip ${lobbyFilter === id ? 'active' : ''}" data-f="${id}">${label}</button>
         `).join('')}
       </div>
 
       <div class="games-grid" id="lobby-grid">
-        ${filtered.map((g) => `
+        ${searched.length === 0
+          ? `<div class="lobby-empty">По «${escAttr(lobbySearch.trim())}» ничего не нашлось.<br><button class="btn btn-ghost btn-sm" id="lobby-search-reset" style="margin-top:10px;">Показать все игры</button></div>`
+          : searched.map((g) => `
           <div class="game-card" data-gid="${g.id}">
             <div class="game-card-glow" style="background:${g.glow}"></div>
             <div>
@@ -10944,6 +11878,24 @@ window.App = (function () {
     main.querySelectorAll('.game-card').forEach((card) => {
       card.onclick = () => openGame(card.dataset.gid);
     });
+
+    const searchInput = main.querySelector('#lobby-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        lobbySearch = searchInput.value;
+        renderLobby(main);
+        const again = main.querySelector('#lobby-search');
+        if (again) {
+          again.focus();
+          const len = again.value.length;
+          try { again.setSelectionRange(len, len); } catch (_) {}
+        }
+      });
+    }
+    const clearSearch = main.querySelector('#lobby-search-clear');
+    if (clearSearch) clearSearch.onclick = () => { lobbySearch = ''; renderLobby(main); };
+    const resetSearch = main.querySelector('#lobby-search-reset');
+    if (resetSearch) resetSearch.onclick = () => { lobbySearch = ''; renderLobby(main); };
   }
 
   // =========================================================================
@@ -11637,6 +12589,7 @@ window.App = (function () {
     const totalAttempts = st.stats.tasksSolved + st.stats.tasksWrong;
     const accuracy = totalAttempts > 0 ? Math.round((st.stats.tasksSolved / totalAttempts) * 100) : 100;
     const unlockedCount = Object.keys(st.achievements).length;
+    const errCount = (window.BR_ERROR_LOG && window.BR_ERROR_LOG.read().length) || 0;
 
     main.innerHTML = `
       <div class="hero-banner" style="margin-bottom:16px;">
@@ -11699,6 +12652,13 @@ window.App = (function () {
         }).join('')}
       </div>
 
+      <h3 style="margin:0 0 10px; font-size:16px;">💾 Сохранение и поддержка</h3>
+      <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="prof-export" style="flex:1; min-width:150px;" title="Архив прогресса. Баланс в режиме Тусовки из файла НЕ восстанавливается — он живёт в облаке.">💾 Скачать .json</button>
+        <button class="btn btn-ghost" id="prof-import" style="flex:1; min-width:150px;">📂 Загрузить .json</button>
+      </div>
+      <button class="btn btn-ghost btn-block" id="prof-errorlog" style="margin-bottom:10px; color:var(--cyan);">🐞 Отчёт об ошибке${errCount > 0 ? ` · в журнале: ${errCount}` : ''}</button>
+      <input type="file" id="prof-import-file" accept=".json,application/json" style="display:none;" />
       <button class="btn btn-ghost btn-block" id="prof-reset" style="color:var(--crimson);">
         🗑️ Сбросить весь прогресс
       </button>
@@ -11718,6 +12678,107 @@ window.App = (function () {
         UI.closeModal();
         renderProfile(main);
         UI.toast('Прогресс сброшен', 'loss');
+      };
+    };
+
+    main.querySelector('#prof-export').onclick = () => {
+      try {
+        const raw = localStorage.getItem('brainroyale_state_v1');
+        const payload = { app: 'brainroyale', version: 1, savedAt: new Date().toISOString(), state: raw ? JSON.parse(raw) : {} };
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'brainroyale-save-' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+        UI.toast('Сохранение скачано', 'win');
+      } catch (e) {
+        UI.toast('Не удалось сохранить: ' + ((e && e.message) || e), 'loss');
+      }
+    };
+
+    const importInput = main.querySelector('#prof-import-file');
+    main.querySelector('#prof-import').onclick = () => importInput.click();
+    importInput.onchange = () => {
+      const f = importInput.files && importInput.files[0];
+      if (!f) return;
+      if (f.size > 2 * 1024 * 1024) { UI.toast('Файл слишком большой', 'loss'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || '{}'));
+          const stObj = (parsed && parsed.app === 'brainroyale') ? parsed.state : parsed;
+          if (!stObj || typeof stObj !== 'object' || Array.isArray(stObj)) throw new Error('Это не файл сохранения BrainRoyale');
+          if (stObj.coins !== undefined && typeof stObj.coins !== 'number') throw new Error('Поле «coins» повреждено');
+          const soloMode = !(window.BR_FB && window.BR_FB.enabled);
+          UI.openModal(`
+            <h3 style="margin-top:0;">Загрузить сохранение?</h3>
+            <p style="font-size:13px; color:var(--text-secondary);">Прогресс, ачивки, прокачка и квесты будут <b>заменены</b> данными из файла.<br><br>
+            ${soloMode
+              ? 'Оффлайн-режим: будет восстановлен и баланс из файла (обманывать тут некого — игра полностью локальная).'
+              : '🛡️ <b>Баланс НЕ восстанавливается из файла</b> — он берётся из облака/текущего прогресса. Откатить проигранное обратно нельзя.'}</p>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <button class="btn btn-ghost" style="flex:1" onclick="UI.closeModal()">Отмена</button>
+              <button class="btn btn-emerald" style="flex:1" id="confirm-import">Загрузить</button>
+            </div>
+          `);
+          document.getElementById('confirm-import').onclick = () => {
+            try {
+              let toSave = stObj;
+              if (!soloMode) {
+                const current = AppState.get();
+                toSave = { ...stObj, coins: current.coins, jackpotPool: current.jackpotPool };
+              }
+              localStorage.setItem('brainroyale_state_v1', JSON.stringify(toSave));
+              UI.closeModal();
+              UI.toast(soloMode ? 'Сохранение загружено!' : 'Остальное загружено, баланс — из облака', 'gold');
+              setTimeout(() => window.location.reload(), 700);
+            } catch (e) {
+              UI.toast('Не удалось записать сохранение', 'loss');
+            }
+          };
+        } catch (e) {
+          UI.toast('Ошибка файла: ' + ((e && e.message) || e), 'loss');
+        }
+      };
+      reader.readAsText(f);
+    };
+
+    main.querySelector('#prof-errorlog').onclick = () => {
+      const errs = (window.BR_ERROR_LOG && window.BR_ERROR_LOG.read()) || [];
+      const report = [
+        'BrainRoyale ' + (window.BR_VERSION || '?') + ' · Отчёт об ошибке',
+        'Дата: ' + new Date().toLocaleString(),
+        'Платформа: ' + (navigator.userAgent || 'unknown'),
+        'Ошибок в журнале: ' + errs.length,
+        ''
+      ].concat(errs.map((e, i) => (i + 1) + '. [' + new Date(e.t).toLocaleString() + '] ' + e.msg + (e.extra ? ' @ ' + e.extra : ''))).join('\n');
+      UI.openModal(`
+        <h3 style="margin-top:0;">🐞 Отчёт об ошибке</h3>
+        <p style="font-size:12px; color:var(--text-secondary);">Если игра зависла или что-то сломалось — скопируй отчёт и отправь разработчику. Личные данные не собираются.</p>
+        <textarea id="err-report" readonly style="width:100%; height:170px; box-sizing:border-box; background:#0d1326; color:#9fd0ff; border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px; font-size:11px; font-family:ui-monospace,monospace;"></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn btn-ghost" style="flex:1" id="err-clear">Очистить журнал</button>
+          <button class="btn btn-emerald" style="flex:2" id="err-copy">📋 Копировать</button>
+        </div>
+      `);
+      document.getElementById('err-report').value = report;
+      document.getElementById('err-copy').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(report);
+          UI.toast('Отчёт скопирован!', 'win');
+        } catch (_) {
+          const ta = document.getElementById('err-report');
+          ta.select();
+          try { document.execCommand('copy'); UI.toast('Отчёт скопирован!', 'win'); }
+          catch (e2) { UI.toast('Выдели текст и скопируй вручную', 'gold'); }
+        }
+      };
+      document.getElementById('err-clear').onclick = () => {
+        if (window.BR_ERROR_LOG) window.BR_ERROR_LOG.clear();
+        UI.closeModal();
+        UI.toast('Журнал очищен', 'info');
       };
     };
   }
@@ -11773,6 +12834,17 @@ window.App = (function () {
         navigate(btn.dataset.tab);
       };
     });
+
+    const stTop = document.getElementById('scroll-top');
+    if (stTop) {
+      window.addEventListener('scroll', () => {
+        stTop.classList.toggle('visible', (window.scrollY || document.documentElement.scrollTop || 0) > 420);
+      }, { passive: true });
+      stTop.onclick = () => {
+        try { if (window.BR_HAPTIC) window.BR_HAPTIC.impact('light'); } catch (_) {}
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    }
 
     updateHeader();
     renderMain();
