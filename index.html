@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
   <script>
-    window.BR_VERSION = '2.9.0';
+    window.BR_VERSION = '2.10.1';
     (function () {
       var KEY = 'br_error_log_v1';
       function push(msg, extra) {
@@ -46,7 +46,7 @@
       selection: function () { try { if (this.enabled()) this.tg().HapticFeedback.selectionChanged(); } catch (_) {} }
     };
   </script>
-  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.9)</title>
+  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.10.1)</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="BrainRoyale — Умное Казино 🧠🎰" />
   <meta property="og:description" content="Монеты только за решение задач! 20 игр, 7 тренажёров мозга, 0₽ донатов." />
@@ -1477,8 +1477,19 @@ body.fx-shake .app-shell { animation:fxShakeK 0.45s ease; }
 body.fx-shake-hard .app-shell { animation:fxShakeK 0.62s ease; }
 @media (prefers-reduced-motion: reduce) {
   .fx-confetti, .fx-bigwin, .fx-flash { animation:none !important; display:none !important; }
+  .slot-cell.land-pop, .slot-reel-strip, [style*="cellDropIn"] { animation:none !important; transition:none !important; }
   body.fx-shake .app-shell, body.fx-shake-hard .app-shell { animation:none !important; }
 }
+
+/* Слот 5×3: ленты барабанов (v2.10) */
+.slot-reel-window { position:relative; overflow:hidden; border-radius:12px; }
+.slot-reel-strip { display:flex; flex-direction:column; gap:7px; will-change:transform; }
+.slot-reel-strip .slot-cell { flex:0 0 auto; }
+.slot-reel-strip.spin-blur { filter:blur(1.7px) brightness(1.15); }
+@keyframes slotLandPop { 0% { transform:scale(1.14); } 55% { transform:scale(0.92); } 100% { transform:scale(1); } }
+.slot-cell.land-pop { animation:slotLandPop 0.32s ease; }
+/* Каскадные 6×5: падение символов сверху */
+@keyframes cellDropIn { 0% { transform:translateY(-18px); opacity:0; } 60% { transform:translateY(3px); opacity:1; } 100% { transform:translateY(0); opacity:1; } }
 
   </style>
   <script async src="https://telegram.org/js/telegram-web-app.js" onload="window.SocialArena && window.SocialArena.onSdkLoaded && window.SocialArena.onSdkLoaded()"></script>
@@ -2061,6 +2072,38 @@ window.AppState = (function () {
 
   let unsyncedCoinDelta = 0;
   let unsyncedJpDelta = 0;
+  // Надёжная очередь синхронизации: каждый «кусок» дельты оборачивается в операцию со стабильным id.
+  // Операции удаляются из очереди только после успешного /api/sync. При сбое — остаются и отправляются снова
+  // (сервер применяет каждую операцию максимум один раз по syncId). Раньше дельта терялась навсегда, и
+  // успешный полл затирал локальный баланс устаревшим серверным значением.
+  let pendingSyncOps = [];
+  let syncOpSeq = 0;
+  function newSyncOpId() {
+    syncOpSeq += 1;
+    return 's' + Date.now().toString(36) + '-' + syncOpSeq + '-' + Math.random().toString(36).slice(2, 8);
+  }
+  function stashPendingOps() {
+    if (unsyncedCoinDelta !== 0 || unsyncedJpDelta !== 0) {
+      pendingSyncOps.push({ syncId: newSyncOpId(), coinsDelta: unsyncedCoinDelta, jpDelta: unsyncedJpDelta });
+      unsyncedCoinDelta = 0;
+      unsyncedJpDelta = 0;
+    }
+    return pendingSyncOps.slice();
+  }
+  function confirmPendingOps(ops) {
+    if (!ops || !ops.length) return;
+    const ids = new Set(ops.map((o) => o.syncId));
+    pendingSyncOps = pendingSyncOps.filter((o) => !ids.has(o.syncId));
+  }
+  function pendingDeltaTotals() {
+    let coins = unsyncedCoinDelta;
+    let jp = unsyncedJpDelta;
+    for (const o of pendingSyncOps) {
+      coins += o.coinsDelta || 0;
+      jp += o.jpDelta || 0;
+    }
+    return { coinsDelta: coins, jpDelta: jp };
+  }
   let lastGameId = 'slots';
   let lastBetStaked = 0;
   let wipeoutCheckTimer = null;
@@ -2418,16 +2461,15 @@ window.AppState = (function () {
   }
 
   function consumeSyncDelta() {
-    const d = { coinsDelta: unsyncedCoinDelta, jpDelta: unsyncedJpDelta };
-    unsyncedCoinDelta = 0;
-    unsyncedJpDelta = 0;
-    return d;
+    const ops = stashPendingOps();
+    const t = pendingDeltaTotals();
+    return { coinsDelta: t.coinsDelta, jpDelta: t.jpDelta, ops };
   }
 
   function applyServerSnapshot(serverCoins, sharedJackpot) {
     let changed = false;
     if (typeof serverCoins === 'number' && !Number.isNaN(serverCoins)) {
-      const expected = Math.max(0, Math.round(serverCoins + unsyncedCoinDelta));
+      const expected = Math.max(0, Math.round(serverCoins + pendingDeltaTotals().coinsDelta));
       if (expected !== state.coins) {
         state.coins = expected;
         changed = true;
@@ -2486,6 +2528,12 @@ window.AppState = (function () {
     claimEndlessContract,
     unlockAchievement,
     consumeSyncDelta,
+    stashPendingOps,
+    confirmPendingOps,
+    pendingDeltaTotals,
+    hasPendingOps() {
+      return pendingSyncOps.length > 0 || unsyncedCoinDelta !== 0 || unsyncedJpDelta !== 0;
+    },
     applyServerSnapshot,
     setExactCoinsFromAction,
     subscribe,
@@ -5754,6 +5802,59 @@ window.GameCore = (function () {
         }
       }
 
+      const SPIN_EXTRA = 10;
+      function startStripSpin(finalMatrix, onLanded) {
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) { onLanded(); return []; }
+        const timers = [];
+        gridEl.innerHTML = '';
+        const cols = [];
+        for (let c = 0; c < 5; c++) {
+          const col = document.createElement('div');
+          col.className = 'slot-reel-col';
+          const winEl = document.createElement('div');
+          winEl.className = 'slot-reel-window';
+          const strip = document.createElement('div');
+          strip.className = 'slot-reel-strip spin-blur';
+          const seq = [
+            ...Array.from({ length: SPIN_EXTRA }, () => rollSymbol()),
+            ...finalMatrix[c]
+          ];
+          for (const sym of seq) {
+            const cell = document.createElement('div');
+            cell.className = 'slot-cell';
+            cell.textContent = sym.icon;
+            strip.appendChild(cell);
+          }
+          winEl.appendChild(strip);
+          col.appendChild(winEl);
+          gridEl.appendChild(col);
+          cols.push({ winEl, strip, c });
+        }
+        const firstCell = cols[0].strip.querySelector('.slot-cell');
+        const cellH = (firstCell && firstCell.offsetHeight) || 64;
+        const GAP = 7;
+        const pitch = cellH + GAP;
+        const windowH = 3 * cellH + 2 * GAP;
+        const shift = SPIN_EXTRA * pitch;
+        cols.forEach(({ winEl, strip, c }) => {
+          winEl.style.height = windowH + 'px';
+          strip.style.transform = 'translateY(0px)';
+          void strip.offsetHeight;
+          const dur = 700 + c * 170;
+          strip.style.transition = `transform ${dur}ms cubic-bezier(0.15, 0.85, 0.25, 1.02)`;
+          strip.style.transform = `translateY(-${shift}px)`;
+          timers.push(setTimeout(() => {
+            SFX.tick(c);
+            strip.classList.remove('spin-blur');
+            const cells = strip.querySelectorAll('.slot-cell');
+            for (let k = cells.length - 3; k < cells.length; k++) cells[k].classList.add('land-pop');
+          }, dur + 30));
+        });
+        timers.push(setTimeout(onLanded, 700 + 4 * 170 + 90));
+        return timers;
+      }
+
       function doSpin(betFromInput) {
         if (spinning) return;
         try { if (window.SFX) window.SFX.spin(); } catch (_) {}
@@ -5787,47 +5888,36 @@ window.GameCore = (function () {
           evaluateSpin(finalMatrix, bet, isFS, true);
         };
 
-        let activeCols = [0, 1, 2, 3, 4];
-        flickerIv = setInterval(() => {
-          activeCols.forEach((c) => {
-            matrix[c] = [rollSymbol(), rollSymbol(), rollSymbol()];
-          });
-          renderReels(activeCols);
-        }, 75);
+        const onLanded = () => {
+          if (settled) return;
+          settled = true;
+          pendingSpinSettle = null;
+          if (flickerIv) { clearInterval(flickerIv); flickerIv = null; }
+          spinning = false;
+          matrix = finalMatrix;
+          evaluateSpin(finalMatrix, bet, isFS, false);
+          renderReels([]);
 
-        reelTimeouts = [0, 1, 2, 3, 4].map((colIdx) =>
-          setTimeout(() => {
-            activeCols = activeCols.filter((x) => x !== colIdx);
-            matrix[colIdx] = finalMatrix[colIdx];
-            SFX.tick(colIdx);
-            renderReels(activeCols);
-            if (colIdx === 4) {
-              clearInterval(flickerIv);
-              flickerIv = null;
-              if (!settled) {
-                settled = true;
-                pendingSpinSettle = null;
-                spinning = false;
-                evaluateSpin(finalMatrix, bet, isFS, false);
-                renderReels([]);
-
-                if (autoSpin) {
-                  autoNextTimer = setTimeout(() => {
-                    if (!autoSpin || !document.body.contains(betPanel)) return;
-                    if (freeSpins === 0 && AppState.get().coins < autoBetVal) {
-                      autoSpin = false;
-                      UI.toast('⏹️ Автокрутка остановлена: пополните баланс задачей 🧠', 'loss');
-                      renderControls();
-                      return;
-                    }
-                    doSpin(autoBetVal);
-                  }, 520);
-                }
+          if (autoSpin) {
+            autoNextTimer = setTimeout(() => {
+              if (!autoSpin || !document.body.contains(betPanel)) return;
+              if (freeSpins === 0 && AppState.get().coins < autoBetVal) {
+                autoSpin = false;
+                UI.toast('⏹️ Автокрутка остановлена: пополните баланс задачей 🧠', 'loss');
                 renderControls();
+                return;
               }
-            }
-          }, 260 + colIdx * 155)
-        );
+              doSpin(autoBetVal);
+            }, 520);
+          }
+          renderControls();
+        };
+        try {
+          reelTimeouts = startStripSpin(finalMatrix, onLanded) || [];
+        } catch (e) {
+          console.warn('[slots] strip spin failed, fallback settle', e);
+          reelTimeouts = [setTimeout(onLanded, 700)];
+        }
       }
 
       function renderControls() {
@@ -8985,7 +9075,7 @@ window.GameCore = (function () {
                 height:46px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
                 background:${isHit ? 'rgba(0,230,118,0.28)' : isOrb ? 'rgba(255,184,0,0.22)' : 'rgba(255,255,255,0.04)'};
                 border:1px solid ${isHit ? '#00e676' : isOrb ? '#ffb800' : 'rgba(255,255,255,0.07)'};
-                transform:${isHit ? 'scale(1.06)' : 'scale(1)'}; transition:all 0.16s; position:relative;
+                transform:${isHit ? 'scale(1.06)' : 'scale(1)'}; transition:all 0.16s; position:relative; animation:cellDropIn 0.34s cubic-bezier(0.2,0.9,0.3,1.05);
               `;
               el.innerHTML = `
                 <span style="font-size:${isOrb ? '17px' : '22px'}; line-height:1;">${cell.icon}</span>
@@ -10115,6 +10205,9 @@ window.SocialArena = (function () {
   const hashFallback = parseHashWebAppData();
 
   let syncTimer = null;
+  let syncRetryDelayMs = 900;
+  let syncRetryTimer = null;
+  function pendingOpsPending() { return !!(window.AppState && typeof window.AppState.hasPendingOps === 'function' && window.AppState.hasPendingOps()); }
   let pollTimer = null;
   let robTimerIv = null;
   let activeContainer = null;
@@ -10375,14 +10468,41 @@ window.SocialArena = (function () {
   }
   async function brFbPool(delta) {
     const ref = fbState.db.doc('arena/MAIN');
+    const d = Math.round(delta || 0);
     const res = await fbState.db.runTransaction(async (tx) => {
       const doc = await tx.get(ref);
       const cur = doc.exists ? (doc.data().pool || 0) : 5000;
-      const next = Math.max(0, Math.round(cur + (delta || 0)));
+      if (d === 0) return cur; // идемпотентное чтение, без записи
+      const next = Math.max(0, Math.round(cur + d));
       if (doc.exists) tx.update(ref, { pool: next }); else tx.set(ref, { pool: next });
       return next;
     });
     return res;
+  }
+
+  // exactly-once: применяем только те операции, чьих syncId ещё не встречали на этом аккаунте
+  function fbPartitionOps(d, ops) {
+    const applied = Array.isArray(d.appliedSyncIds) ? d.appliedSyncIds.slice(-49) : [];
+    const seen = new Set(applied);
+    const fresh = [];
+    let coinsDelta = 0, jpDelta = 0;
+    for (const op of ops) {
+      const id = String((op && (op.syncId || op.id)) || '');
+      if (id && seen.has(id)) continue;
+      coinsDelta += Math.round((op && op.coinsDelta) || 0);
+      jpDelta += Math.max(0, Math.round((op && op.jpDelta) || 0));
+      fresh.push({ id, coinsDelta: Math.round((op && op.coinsDelta) || 0), jpDelta: Math.max(0, Math.round((op && op.jpDelta) || 0)) });
+      if (id) { seen.add(id); applied.push(id); }
+    }
+    // Без clamp по сумме: у клиента своя игровая экономика, дельты аддитивны;
+    // ответственность за правдоподобность — на клиенте (как и было), защита — идемпотентность по syncId.
+    return { fresh, coinsDelta, jpDelta, appliedSyncIds: applied.slice(-50) };
+  }
+  function fbLegacyOps(payload) {
+    const cd = Math.round((payload && payload.coinsDelta) || 0);
+    const jp = Math.max(0, Math.round((payload && payload.jpDelta) || 0));
+    if (!cd && !jp) return [];
+    return [{ syncId: '', coinsDelta: cd, jpDelta: jp }]; // legacy-клиент без id: старое поведение
   }
 
   async function brFbHandleSync(payload) {
@@ -10390,10 +10510,9 @@ window.SocialArena = (function () {
     if (!okAuth) return null;
     const st = AppState.get();
     // ВАЖНО: дельты уже вычитаны в syncNow() и приезжают в payload — не потребляем их повторно!
-    const delta = {
-      coinsDelta: (payload && payload.coinsDelta) || 0,
-      jpDelta: (payload && payload.jpDelta) || 0
-    };
+    const opsSource = (payload && Array.isArray(payload.ops) && payload.ops.length)
+      ? payload.ops
+      : fbLegacyOps(payload);
     const uid = brFbId();
     const name = brFbName();
     const startParam = (payload && payload.startParam) || '';
@@ -10407,7 +10526,8 @@ window.SocialArena = (function () {
       if (doc.exists) {
         const d = doc.data();
         const roomCode = requestedRoom || brFbRoomNormalize(d.roomCode);
-        const coins = Math.max(0, Math.round((d.coins || 0) + (delta.coinsDelta || 0)));
+        const applied = fbPartitionOps(d, opsSource);
+        const coins = Math.max(0, Math.round((d.coins || 0) + applied.coinsDelta));
         const next = {
           id: uid, name, roomCode,
           coins,
@@ -10417,24 +10537,30 @@ window.SocialArena = (function () {
           vaultLock, robsOk: d.robsOk || 0,
           tasksSolved: stats.tasksSolved || d.tasksSolved || 0,
           biggestWin: stats.biggestWin || d.biggestWin || 0,
+          appliedSyncIds: applied.appliedSyncIds,
           updatedAt: fbTs()
         };
         tx.update(ref, next);
+        next._jpDelta = applied.jpDelta; // сколько (новых) джекпот-дельт нужно внести в пул
         return next;
       }
-      const coins = Math.max(0, Math.round(st.coins + (delta.coinsDelta || 0)));
+      const fresh = fbPartitionOps({ appliedSyncIds: [] }, opsSource);
+      const coins = Math.max(0, Math.round(st.coins + fresh.coinsDelta));
       const roomCode = requestedRoom || 'MAIN';
       const next = {
         id: uid, name, roomCode, coins,
         level: st.level || 1, xp: st.xp || 0, prestigeCores: st.prestigeCores || 0,
         vaultLock, robsOk: 0, tasksSolved: (st.stats && st.stats.tasksSolved) || 0,
-        biggestWin: (st.stats && st.stats.biggestWin) || 0, createdAt: fbTs(), updatedAt: fbTs()
+        biggestWin: (st.stats && st.stats.biggestWin) || 0,
+        appliedSyncIds: fresh.appliedSyncIds,
+        createdAt: fbTs(), updatedAt: fbTs()
       };
       tx.set(ref, next);
+      next._jpDelta = fresh.jpDelta;
       return next;
     });
 
-    const pool = await brFbPool(delta.jpDelta || 0);
+    const pool = await brFbPool((meProfile && meProfile._jpDelta) || 0);
 
     // Кормим ленту событиями из игры
     const ev = payload && payload.gameEvent;
@@ -10455,7 +10581,8 @@ window.SocialArena = (function () {
     const inviteUrl = pageUrl + (room && room !== 'MAIN' ? ('?chat=' + encodeURIComponent(room)) : '');
     const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино!');
     const shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl || pageUrl) + '&text=' + shareText;
-    const pub = { ...meProfile, title: computeRoastTitle(meProfile, 0) };
+    const { _jpDelta, ...mePublic } = meProfile;
+    const pub = { ...mePublic, title: computeRoastTitle(mePublic, 0) };
 
     return {
       ok: true,
@@ -10936,10 +11063,15 @@ window.SocialArena = (function () {
   async function syncNow(extra = {}) {
     if (!window.AppState) return null;
     const st = AppState.get();
-    const delta = AppState.consumeSyncDelta();
+    const ops = AppState.stashPendingOps();
+    const sentTotals = ops.reduce(
+      (acc, o) => ({ coinsDelta: acc.coinsDelta + (o.coinsDelta || 0), jpDelta: acc.jpDelta + (o.jpDelta || 0) }),
+      { coinsDelta: 0, jpDelta: 0 }
+    );
     const payload = {
-      coinsDelta: delta.coinsDelta,
-      jpDelta: delta.jpDelta,
+      coinsDelta: sentTotals.coinsDelta,
+      jpDelta: sentTotals.jpDelta,
+      ops,
       clientCoinsHint: st.coins,
       level: st.level,
       xp: st.xp,
@@ -10959,6 +11091,8 @@ window.SocialArena = (function () {
     const data = await apiPost('/api/sync', payload);
     if (data && data.ok) {
       staticMode = false;
+      AppState.confirmPendingOps(ops);
+      syncRetryDelayMs = 900;
       const prevCoins = AppState.get().coins;
       AppState.applyServerSnapshot(data.user.coins, data.jackpotPool);
       if (data.externalNotice && window.UI) {
@@ -10981,7 +11115,12 @@ window.SocialArena = (function () {
     }
 
     // Fallback for GitHub Pages / offline static hosting: everything still works 24/7!
+    // ВАЖНО: невыгруженные операции остаются в очереди (pendingSyncOps) и будут
+    // доpush'ены при следующем успешном sync — баланс больше не «исчезает».
     staticMode = true;
+    syncRetryDelayMs = Math.min(15000, (syncRetryDelayMs || 900) * 2);
+    if (syncRetryTimer) clearTimeout(syncRetryTimer);
+    syncRetryTimer = setTimeout(() => { if (pendingOpsPending()) syncNow(); }, syncRetryDelayMs);
     buildStaticBoardSnapshot(extra.gameEvent);
     return null;
   }
