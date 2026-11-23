@@ -534,6 +534,14 @@ html, body {
   pointer-events: none;
   mix-blend-mode: screen;
 }
+.slot-sym-inline {
+  width: 1.15em;
+  height: 1.15em;
+  object-fit: contain;
+  vertical-align: -0.22em;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
 
 .game-tag {
   font-size: 10px;
@@ -5736,16 +5744,17 @@ window.GameCore = (function () {
   // =========================================================================
   // 5. QUANTUM SLOTS 5x3 (СЛОТЫ С ФРИСПИНАМИ)
   // =========================================================================
+  const slotSymImg = (id) => 'assets/games/slots/symbols/' + id + '.jpg';
   const SLOT_SYMBOLS = [
-    { id: 'wild', icon: '🧠', mult3: 18, mult4: 60, mult5: 220, weight: 2 },
-    { id: 'seven', icon: '7️⃣', mult3: 12, mult4: 40, mult5: 140, weight: 4 },
-    { id: 'gem', icon: '💎', mult3: 8, mult4: 24, mult5: 75, weight: 7 },
-    { id: 'bell', icon: '🔔', mult3: 5, mult4: 14, mult5: 40, weight: 11 },
-    { id: 'clover', icon: '🍀', mult3: 3.5, mult4: 9, mult5: 25, weight: 15 },
-    { id: 'cherry', icon: '🍒', mult3: 2.2, mult4: 5.5, mult5: 15, weight: 20 },
-    { id: 'lemon', icon: '🍋', mult3: 1.5, mult4: 4, mult5: 10, weight: 24 },
-    { id: 'plum', icon: '🍇', mult3: 1.2, mult4: 3, mult5: 8, weight: 26 },
-    { id: 'scatter', icon: '⚛️', mult3: 2, mult4: 8, mult5: 25, weight: 3 }
+    { id: 'wild', icon: '🧠', img: slotSymImg('wild'), mult3: 18, mult4: 60, mult5: 220, weight: 2 },
+    { id: 'seven', icon: '7️⃣', img: slotSymImg('seven'), mult3: 12, mult4: 40, mult5: 140, weight: 4 },
+    { id: 'gem', icon: '💎', img: slotSymImg('gem'), mult3: 8, mult4: 24, mult5: 75, weight: 7 },
+    { id: 'bell', icon: '🔔', img: slotSymImg('bell'), mult3: 5, mult4: 14, mult5: 40, weight: 11 },
+    { id: 'clover', icon: '🍀', img: slotSymImg('clover'), mult3: 3.5, mult4: 9, mult5: 25, weight: 15 },
+    { id: 'cherry', icon: '🍒', img: slotSymImg('cherry'), mult3: 2.2, mult4: 5.5, mult5: 15, weight: 20 },
+    { id: 'lemon', icon: '🍋', img: slotSymImg('lemon'), mult3: 1.5, mult4: 4, mult5: 10, weight: 24 },
+    { id: 'plum', icon: '🍇', img: slotSymImg('plum'), mult3: 1.2, mult4: 3, mult5: 8, weight: 26 },
+    { id: 'scatter', icon: '⚛️', img: slotSymImg('scatter'), mult3: 2, mult4: 8, mult5: 25, weight: 3 }
   ];
 
   const PAYLINES = [
@@ -5827,8 +5836,8 @@ window.GameCore = (function () {
       root.innerHTML = `
         <div class="game-stage">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px;">
-            <span>9 активных линий · 🧠 = Wild</span>
-            <span id="sl-fs-badge" style="font-weight:800; color:var(--purple-light);">3× ⚛️ = 5 Фриспинов (x2)</span>
+            <span>9 активных линий · <img class="slot-sym-inline" src="assets/games/slots/symbols/wild.jpg" alt="wild"> = Wild</span>
+            <span id="sl-fs-badge" style="font-weight:800; color:var(--purple-light);">3× <img class="slot-sym-inline" src="assets/games/slots/symbols/scatter.jpg" alt="scatter"> = 5 Фриспинов (x2)</span>
           </div>
           <div class="slots-machine">
             <div class="slots-grid" id="sl-grid"></div>
@@ -5843,6 +5852,18 @@ window.GameCore = (function () {
       const fsBadge = root.querySelector('#sl-fs-badge');
       const betPanel = root.querySelector('#sl-bet');
 
+      // Рендер символа: неоновая картинка, при ошибке — эмодзи-фоллбэк
+      function setCellSymbol(cell, sym) {
+        cell.textContent = '';
+        const img = document.createElement('img');
+        img.className = 'slot-sym-img';
+        img.alt = sym.id;
+        img.loading = 'lazy';
+        img.src = sym.img;
+        img.onerror = () => { cell.textContent = sym.icon; };
+        cell.appendChild(img);
+      }
+
       function renderReels(spinCols = []) {
         if (!document.body.contains(gridEl)) return;
         gridEl.innerHTML = '';
@@ -5854,14 +5875,14 @@ window.GameCore = (function () {
             cell.className = 'slot-cell';
             if (spinCols.includes(c)) cell.classList.add('spinning');
             if (winCoords.has(`${c}_${r}`)) cell.classList.add('win-cell');
-            cell.textContent = matrix[c][r].icon;
+            setCellSymbol(cell, matrix[c][r]);
             col.appendChild(cell);
           }
           gridEl.appendChild(col);
         }
         fsBadge.innerHTML = freeSpins > 0
           ? `🔥 ФРИСПИНЫ x2: осталось ${freeSpins}`
-          : `3× ⚛️ = 5 Фриспинов (x2)`;
+          : `3× <img class="slot-sym-inline" src="assets/games/slots/symbols/scatter.jpg" alt="scatter"> = 5 Фриспинов (x2)`;
       }
 
       function evaluateSpin(finalMat, betUsed, isFreeSpin, silent = false) {
@@ -5954,7 +5975,7 @@ window.GameCore = (function () {
           for (const sym of seq) {
             const cell = document.createElement('div');
             cell.className = 'slot-cell';
-            cell.textContent = sym.icon;
+            setCellSymbol(cell, sym);
             strip.appendChild(cell);
           }
           winEl.appendChild(strip);
@@ -11833,16 +11854,6 @@ window.App = (function () {
         <div style="margin-top:6px;"><b>2.</b> Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх ⬆️ внизу экрана).</div>
         <div style="margin-top:6px;"><b>3.</b> Выберите <b>«На экран „Домой“»</b> → <b>«Добавить»</b>.</div>
         <div style="margin-top:6px; color:var(--emerald);">✅ Готово! На рабочем столе iPhone появится иконка <b>BrainRoyale</b> без адресной строки и с работой офлайн!</div>
-      </div>
-      <div style="background:rgba(140,82,255,0.12); border:1px solid rgba(140,82,255,0.35); border-radius:14px; padding:12px; font-size:12px; color:var(--text-secondary); line-height:1.5;">
-        📦 <b>Автономный 1-файловый вариант:</b> вы также можете скачать единый офлайн-файл <code>BrainRoyale-iPhone.html</code> и открывать его на iPhone без интернета через бесплатное приложение <b>Documents (Readdle)</b> или выложить на бесплатный GitHub Pages / Netlify Drop.
-        ${!window.BRAINROYALE_STANDALONE_HTML ? `
-          <div style="margin-top:10px;">
-            <a class="btn btn-purple btn-block" href="BrainRoyale-iPhone.html" download="BrainRoyale-iPhone.html" style="text-decoration:none;">
-              📥 Скачать BrainRoyale-iPhone.html (Офлайн)
-            </a>
-          </div>
-        ` : ''}
       </div>
     `);
   }
