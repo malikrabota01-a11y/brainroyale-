@@ -270,6 +270,7 @@ html, body {
   cursor: pointer;
   transition: background 0.15s, transform 0.12s;
 }
+.music-off { opacity: 0.35; filter: grayscale(1); }
 
 .icon-btn:active {
   transform: scale(0.93);
@@ -510,6 +511,28 @@ html, body {
   font-size: 26px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.game-icon-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.game-stage.has-game-bg {
+  background-image: linear-gradient(rgba(7, 10, 19, 0.76), rgba(7, 10, 19, 0.84)), var(--game-bg-img);
+  background-size: cover;
+  background-position: center;
+}
+.slot-sym-img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .game-tag {
@@ -1521,7 +1544,7 @@ body.fx-shake-hard .app-shell { animation:fxShakeK 0.62s ease; }
           <button class="earn-plus-btn" id="hdr-earn-btn" title="Заработать монеты решением задач"><span class="earn-plus-full">+ Умом</span><span class="earn-plus-short">🧠</span></button>
         </div>
         <button class="icon-btn" id="hdr-mute-btn" title="Звук">🔊</button>
-        <a class="icon-btn" id="hdr-apk-btn" href="BrainRoyale-SmartCasino.apk" download title="Скачать BrainRoyale для Android (.apk, 0.8 МБ)" style="display:none; text-decoration:none;">🤖</a>
+        <button class="icon-btn" id="hdr-music-btn" title="Музыка: вкл">🎵</button>
       </div>
     </header>
 
@@ -1857,6 +1880,58 @@ window.FX = (function () {
 })();
 
 
+// === music.js ===
+// Фоновая музыка игр. Kevin MacLeod (incompetech.com), CC-BY 4.0 — см. CREDITS.md
+window.BRMusic = (function () {
+  let audio = null;
+  let current = null;
+
+  function enabled() {
+    const st = (window.AppState && typeof window.AppState.get === 'function' && window.AppState.get()) || null;
+    return !!st && st.music !== false && !st.muted;
+  }
+
+  function stop() {
+    if (audio) {
+      try { audio.pause(); } catch (_) {}
+      try { audio.removeAttribute('src'); audio.load(); } catch (_) {}
+      audio = null;
+    }
+    current = null;
+  }
+
+  function play(gameId) {
+    if (!enabled()) return false;
+    const url = window.BR_MUSIC && window.BR_MUSIC[gameId];
+    if (!url) return false;
+    if (current === gameId && audio && !audio.paused) return true;  // уже играет — не рестартовать
+    stop();
+    try {
+      const a = new Audio(url);
+      a.loop = true;
+      a.volume = 0.35;
+      a.preload = 'auto';
+      audio = a;
+      current = gameId;
+      const p = a.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  return {
+    play,
+    stop,
+    current: () => current,
+    isEnabled: () => {
+      const st = (window.AppState && typeof window.AppState.get === 'function' && window.AppState.get()) || null;
+      return !!st && st.music !== false;
+    }
+  };
+})();
+
 // === state.js ===
 // Global State, Hardcore Economy v2.6, Ranks, Prestige, Proportional Mega-Jackpot, Contracts & Achievements
 window.AppState = (function () {
@@ -1991,6 +2066,7 @@ window.AppState = (function () {
       bestStreak: 0,
       shieldCharges: 0,
       muted: false,
+      music: true,
       selectedDiff: 0,
       upgrades: {
         neuro_mult: 0,
@@ -2067,6 +2143,7 @@ window.AppState = (function () {
     if (!state.jackpotPool || state.jackpotPool < 250) {
       state.jackpotPool = 500;
     }
+    if (state.music === undefined) state.music = true;
     if (window.SFX) window.SFX.setMuted(!!state.muted);
   }
 
@@ -2544,6 +2621,12 @@ window.AppState = (function () {
       if (window.SFX) window.SFX.setMuted(state.muted);
       save();
       return state.muted;
+    },
+    toggleMusic() {
+      const cur = state.music !== false;
+      state.music = !cur;
+      save();
+      return state.music !== false;
     },
     setDiff(d) {
       state.selectedDiff = d;
@@ -5189,6 +5272,54 @@ window.GameCore = (function () {
   // =========================================================================
   // 4. EUROPEAN ROULETTE (ЕВРОПЕЙСКАЯ РУЛЕТКА)
   // =========================================================================
+  // Фоны игр (assets/games/<id>/bg.jpg). Пусто = фон по умолчанию.
+  // Кладём на window: модули бандла разделены IIFE, общий const невиден между ними.
+  window.BR_GAME_BG = {
+    rocket: 'assets/games/rocket/bg.jpg',
+    mines: 'assets/games/mines/bg.jpg',
+    blackjack: 'assets/games/blackjack/bg.jpg',
+    roulette: 'assets/games/roulette/bg.jpg',
+    slots: 'assets/games/slots/bg.jpg',
+    plinko: 'assets/games/plinko/bg.jpg',
+    tower: 'assets/games/tower/bg.jpg',
+    dice: 'assets/games/dice/bg.jpg',
+    videopoker: 'assets/games/videopoker/bg.jpg',
+    baccarat: 'assets/games/baccarat/bg.jpg',
+    hilo: 'assets/games/hilo/bg.jpg',
+    wheel: 'assets/games/wheel/bg.jpg',
+    keno: 'assets/games/keno/bg.jpg',
+    coinflip: 'assets/games/coinflip/bg.jpg',
+    thimbles: 'assets/games/thimbles/bg.jpg',
+    mineslot: 'assets/games/mineslot/bg.jpg',
+    olympus: 'assets/games/olympus/bg.jpg',
+    bonanza: 'assets/games/bonanza/bg.jpg',
+    doghouse: 'assets/games/doghouse/bg.jpg',
+    bookofra: 'assets/games/bookofra/bg.jpg'
+  };
+
+  window.BR_MUSIC = {
+    rocket: 'assets/audio/rocket.mp3',
+    mines: 'assets/audio/mines.mp3',
+    blackjack: 'assets/audio/blackjack.mp3',
+    roulette: 'assets/audio/roulette.mp3',
+    slots: 'assets/audio/slots.mp3',
+    plinko: 'assets/audio/plinko.mp3',
+    tower: 'assets/audio/tower.mp3',
+    dice: 'assets/audio/dice.mp3',
+    videopoker: 'assets/audio/videopoker.mp3',
+    baccarat: 'assets/audio/baccarat.mp3',
+    hilo: 'assets/audio/hilo.mp3',
+    wheel: 'assets/audio/wheel.mp3',
+    keno: 'assets/audio/keno.mp3',
+    coinflip: 'assets/audio/coinflip.mp3',
+    thimbles: 'assets/audio/thimbles.mp3',
+    mineslot: 'assets/audio/mineslot.mp3',
+    olympus: 'assets/audio/olympus.mp3',
+    bonanza: 'assets/audio/bonanza.mp3',
+    doghouse: 'assets/audio/doghouse.mp3',
+    bookofra: 'assets/audio/bookofra.mp3'
+  };
+
   const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
   const RED_NUMS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
   let rouletteRAF = null;
@@ -11687,15 +11818,6 @@ window.App = (function () {
   let blitzActive = false;
   let blitzIv = null;
 
-  function isNativeApk() {
-    try {
-      if (window.AndroidBridge && typeof window.AndroidBridge.isAndroidApp === 'function') {
-        return !!window.AndroidBridge.isAndroidApp();
-      }
-    } catch (e) {}
-    return !!(window.BRAINROYALE_STANDALONE_HTML || (window.navigator && window.navigator.standalone) || window.location.protocol === 'file:');
-  }
-
   function openIosGuideModal() {
     SFX.tap();
     UI.openModal(`
@@ -11738,6 +11860,7 @@ window.App = (function () {
     if (window.GameCore && typeof window.GameCore.clearActivePanelRefresh === 'function') {
       window.GameCore.clearActivePanelRefresh();
     }
+    if (window.BRMusic) window.BRMusic.stop();
     if (activeGame && typeof activeGame.unmount === 'function') {
       activeGame.unmount();
     }
@@ -11757,7 +11880,6 @@ window.App = (function () {
     const xpFill = document.getElementById('hdr-xp-fill');
     const balEl = document.getElementById('hdr-balance');
     const muteBtn = document.getElementById('hdr-mute-btn');
-    const apkBtn = document.getElementById('hdr-apk-btn');
 
     const coreTag = (st.prestigeCores || 0) > 0 ? ` · 💠${st.prestigeCores}` : '';
     if (rankEl) rankEl.textContent = `${rank.icon} Ур.${st.level} · ${rank.title}${coreTag}`;
@@ -11779,7 +11901,12 @@ window.App = (function () {
       lastBalanceShown = cur;
     }
     if (muteBtn) muteBtn.textContent = st.muted ? '🔇' : '🔊';
-    if (apkBtn) apkBtn.style.display = isNativeApk() ? 'none' : 'inline-flex';
+    const musicBtn = document.getElementById('hdr-music-btn');
+    if (musicBtn) {
+      const on = st.music !== false;
+      musicBtn.classList.toggle('music-off', !on);
+      musicBtn.title = on ? 'Музыка: вкл' : 'Музыка: выкл';
+    }
 
     // Quest / Endless contract claim dot
     const ec = st.endlessContract;
@@ -11876,6 +12003,16 @@ window.App = (function () {
       };
 
       activeGame.mount(main.querySelector('#gm-mount-root'));
+      try {
+        const bgUrl = window.BR_GAME_BG && window.BR_GAME_BG[activeGame.id];
+        if (bgUrl) {
+          main.querySelectorAll('.game-stage').forEach((el) => {
+            el.classList.add('has-game-bg');
+            el.style.setProperty('--game-bg-img', `url('${bgUrl}')`);
+          });
+        }
+      } catch (e) { /* фонов нет — остаёмся на стандартном */ }
+      try { if (window.BRMusic) window.BRMusic.play(activeGame.id); } catch (e) { /* без трека играем молча */ }
       return;
     }
 
@@ -11976,7 +12113,7 @@ window.App = (function () {
             <div class="game-card-glow" style="background:${g.glow}"></div>
             <div>
               <div class="game-card-top">
-                <div class="game-icon-box">${g.icon}</div>
+                <div class="game-icon-box"><span class="game-icon-fallback">${g.icon}</span><img class="game-icon-img" src="assets/games/${g.id}/icon.jpg" alt="" loading="lazy" onerror="this.remove()"></div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
                   <span class="game-tag" style="background:${g.tagColor}28; color:${g.tagColor}; border:1px solid ${g.tagColor}55;">${g.tag}</span>
                   ${AUTO_SPIN_GAME_IDS.has(g.id) ? `<span class="game-tag" style="background:rgba(157,78,221,0.22); color:#d8b4fe; border:1px solid rgba(157,78,221,0.45); font-size:9px;">🔄 АВТО</span>` : ''}
@@ -12964,6 +13101,20 @@ window.App = (function () {
     };
     document.getElementById('hdr-mute-btn').onclick = () => {
       AppState.toggleMute();
+      const stM = AppState.get();
+      if (window.BRMusic) {
+        if (stM.muted) window.BRMusic.stop();
+        else if (activeGame) window.BRMusic.play(activeGame.id);
+      }
+      updateHeader();
+    };
+    document.getElementById('hdr-music-btn').onclick = () => {
+      SFX.tap();
+      const on = AppState.toggleMusic();
+      if (window.BRMusic) {
+        if (!on) window.BRMusic.stop();
+        else if (activeGame) window.BRMusic.play(activeGame.id);
+      }
       updateHeader();
     };
 
