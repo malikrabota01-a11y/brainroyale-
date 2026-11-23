@@ -10425,6 +10425,14 @@ window.SocialArena = (function () {
     return '🎰 Азартный Умник';
   }
 
+  // Кастомный ник игрока (override Telegram-имени и дефолтного «Игрок #1»)
+  function getCustomName() {
+    try {
+      const v = String(localStorage.getItem('br_demo_name') || '').trim().slice(0, 24);
+      return v || null;
+    } catch (e) { return null; }
+  }
+
   function getLocalDemoIdentity() {
     const authUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || (hashFallback && hashFallback.user) || null;
     if (authUser && authUser.id) {
@@ -10445,7 +10453,7 @@ window.SocialArena = (function () {
   }
 
   function setDemoName(newName) {
-    const clean = String(newName || '').trim().slice(0, 24);
+    const clean = String(newName || '').trim().replace(/\s+/g, ' ').slice(0, 24);
     if (!clean) return;
     try {
       localStorage.setItem('br_demo_name', clean);
@@ -10573,6 +10581,8 @@ window.SocialArena = (function () {
     return getLocalDemoIdentity().id;
   }
   function brFbName() {
+    const custom = getCustomName();
+    if (custom) return custom;
     const authUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || (hashFallback && hashFallback.user) || null;
     if (authUser) return String(authUser.first_name || authUser.username || 'Игрок').slice(0, 30);
     return getLocalDemoIdentity().firstName;
@@ -11651,7 +11661,7 @@ window.SocialArena = (function () {
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${boardData.shareUrl ? `<button class="btn btn-emerald" id="soc-invite" style="padding:7px 12px; font-size:12px;">📲 Позвать друга</button>` : ''}
             ${!staticMode ? `<button class="btn btn-ghost" id="soc-room" style="padding:7px 11px; font-size:12px;">🏠 Код комнаты</button>` : ''}
-            ${!isRealTelegram() ? `<button class="btn btn-ghost" id="soc-rename" style="padding:7px 11px; font-size:12px;">✏️ Ник</button>` : ''}
+            <button class="btn btn-ghost" id="soc-rename" style="padding:7px 11px; font-size:12px;">✏️ Ник</button>
             ${st.coins < 200 ? `<button class="btn btn-crimson" id="soc-beg" style="padding:7px 12px; font-size:12px;">🥺 На дошик</button>` : ''}
           </div>
         </div>
