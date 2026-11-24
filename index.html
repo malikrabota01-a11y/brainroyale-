@@ -1187,6 +1187,63 @@ html, body {
   transition: all 0.14s;
 }
 
+
+/* ===== «Найди отличия» (Тренажёр) ===== */
+.sd-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .sd-board { flex-direction: row; }
+}
+.sd-panel {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0b1024;
+  touch-action: none;
+  user-select: none;
+}
+.sd-panel canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+.sd-panel .sd-tag {
+  position: absolute;
+  top: 6px; left: 8px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.75);
+  background: rgba(7,10,19,0.55);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 2px 7px;
+  pointer-events: none;
+}
+.sd-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.sd-pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-weight: 700;
+}
+
 .answer-btn:hover:not(:disabled) {
   border-color: var(--cyan);
   background: #253563;
@@ -10911,10 +10968,16 @@ window.SocialArena = (function () {
       fbState.db.collection('duels').where('fromId', '==', uid).where('status', '==', 'pending').get(),
       fbState.db.collection('begRequests').where('roomCode', '==', room).where('status', '==', 'open').get()
     ]);
+    const now = Date.now();
+    const DUEL_TTL = 72 * 3600 * 1000, BEG_TTL = 48 * 3600 * 1000;
+    const mark = (d, ttl) => {
+      const limit = d.expiresAt || ((d.createdAt || d.ts || now) + ttl);
+      return { ...d, expired: limit < now };
+    };
     return {
-      incoming: inSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt),
-      outgoing: outSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt),
-      openBegs: begSnap.docs.map((d) => ({ docId: d.id, ...d.data() })).filter((b) => b.fromId !== uid).sort((a, b) => b.ts - a.ts)
+      incoming: inSnap.docs.map((d) => mark({ docId: d.id, ...d.data() }, DUEL_TTL)).sort((a, b) => b.createdAt - a.createdAt),
+      outgoing: outSnap.docs.map((d) => mark({ docId: d.id, ...d.data() }, DUEL_TTL)).sort((a, b) => b.createdAt - a.createdAt),
+      openBegs: begSnap.docs.map((d) => mark({ docId: d.id, ...d.data() }, BEG_TTL)).filter((b) => b.fromId !== uid).sort((a, b) => b.ts - a.ts)
     };
   }
 
@@ -11078,6 +11141,14 @@ window.SocialArena = (function () {
       const data = await window.BR_FB.listInbox();
       let html = '';
       for (const d of data.incoming) {
+        if (d.expired) {
+          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
+            + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:var(--text-secondary);">⌛ Вызов от ' + escapeHtml(d.fromName) + ' истёк</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 · дуэль больше неактивна</div></div>'
+            + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить (вернуть ставку)</button>'
+            + '</div>';
+          continue;
+        }
         html += '<div class="fb-duel-card" style="border:1px solid rgba(167,139,250,.45);background:rgba(139,92,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
           + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#c4b5fd;">⚔️ ' + escapeHtml(d.fromName) + ' вызывает на дуэль!</div>'
           + '<div style="font-size:12px;color:var(--text-secondary);">Ставка: <b class="num">' + GameCore.fmt(d.stake) + ' 🪙</b> — победитель забирает банк ×2</div></div>'
@@ -11086,18 +11157,31 @@ window.SocialArena = (function () {
           + '</div>';
       }
       for (const d of data.outgoing) {
+        if (d.expired) {
+          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
+            + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⌛ Вызов для ' + escapeHtml(d.toName) + ' истёк</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 заморожена — забери её обратно</div></div>'
+            + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
+            + '</div>';
+          continue;
+        }
         html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
           + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⏳ Ждём ответа: ' + escapeHtml(d.toName) + '</div>'
           + '<div style="font-size:12px;color:var(--text-secondary);">Ставка заморожена: ' + GameCore.fmt(d.stake) + ' 🪙</div></div>'
           + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
           + '</div>';
       }
+      let hiddenExpiredBegs = 0;
       for (const b of data.openBegs) {
+        if (b.expired) { hiddenExpiredBegs++; continue; }
         html += '<div class="fb-beg-card" style="border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
           + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#fcd34d;">🥺 ' + escapeHtml(b.fromName) + ' просит на дошик</div>'
           + '<div style="font-size:12px;color:var(--text-secondary);">Поделишься ' + GameCore.fmt(b.amount || 120) + ' 🪙?</div></div>'
           + '<button class="btn btn-gold" data-give="' + b.docId + '" style="padding:7px 14px;">💛 Дать</button>'
           + '</div>';
+      }
+      if (hiddenExpiredBegs > 0) {
+        html += '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:2px 0 4px;">⌛ Скрыто просроченных просьб: ' + hiddenExpiredBegs + '</div>';
       }
       box.innerHTML = html;
 
@@ -11827,6 +11911,324 @@ window.SocialArena = (function () {
 })();
 
 
+// === spot-diff.js — нейросцена «Найди отличия» (fotorеализм, комбинаторная сборка) ===
+// Кадр Б собирается канвасом из базы + случайно выбранных патчей отличий,
+// поэтому каждое прохождение — новая доска. Анти-спам: 3 сердца, лимит касаний,
+// телеметрия скорости, лимит времени вне модуля (runDiffTask).
+window.SpotDiff = (function () {
+  'use strict';
+
+  var DIFF_SCENES = [
+  {
+    id: 'space', name: 'Космодром', base: 'diff/sp-a.jpg',
+    diffs: [
+      { id: 'space_d1', patch: 'diff/sp-d1.png', crop: [0.2642, 0.5153, 0.2524, 0.2252], cx: 0.3974, cy: 0.6121, r: 0.0790, label: 'кольца Сатурна' },
+      { id: 'space_d2', patch: 'diff/sp-d2.png', crop: [0.3884, 0.7665, 0.1036, 0.0825], cx: 0.4360, cy: 0.8080, r: 0.0461, label: 'стилус на планшете' },
+      { id: 'space_d3', patch: 'diff/sp-d3.png', crop: [0.6946, 0.5578, 0.1377, 0.1710], cx: 0.7840, cy: 0.6652, r: 0.0790, label: 'глаз робота' },
+      { id: 'space_d4', patch: 'diff/sp-d4.png', crop: [0.1756, 0.2913, 0.0657, 0.1392], cx: 0.2063, cy: 0.3588, r: 0.0406, label: 'минутная стрелка часов' },
+      { id: 'space_d5', patch: 'diff/sp-d5.png', crop: [0.2160, 0.7205, 0.1036, 0.1568], cx: 0.2724, cy: 0.8022, r: 0.0504, label: 'полоски на кружке' }
+    ]
+  },
+  {
+    id: 'kitchen', name: 'Кухня', base: 'diff/kit-a.jpg',
+    diffs: [
+      { id: 'kitchen_d1', patch: 'diff/kit-d1.png', crop: [0.2334, 0.6686, 0.1685, 0.1969], cx: 0.3151, cy: 0.7851, r: 0.0769, label: 'банан в вазе' },
+      { id: 'kitchen_d2', patch: 'diff/kit-d2.png', crop: [0.5316, 0.4458, 0.0467, 0.1675], cx: 0.5555, cy: 0.5535, r: 0.0633, label: 'пар над чайником' },
+      { id: 'kitchen_d3', patch: 'diff/kit-d3.png', crop: [0.4422, 0.1309, 0.0957, 0.1368], cx: 0.4880, cy: 0.2062, r: 0.0434, label: 'стрелка часов (10:00)' },
+      { id: 'kitchen_d4', patch: 'diff/kit-d4.png', crop: [0.4691, 0.7653, 0.2603, 0.2123], cx: 0.5879, cy: 0.8711, r: 0.0790, label: 'нож на доске' },
+      { id: 'kitchen_d5', patch: 'diff/kit-d5.png', crop: [0.2128, 0.2995, 0.0744, 0.1097], cx: 0.2494, cy: 0.3565, r: 0.0317, label: 'звёздочка-магнит' }
+    ]
+  },
+  {
+    id: 'study', name: 'Кабинет', base: 'diff/sty-a.jpg',
+    diffs: [
+      { id: 'study_d1', patch: 'diff/sty-d1.png', crop: [0.3703, 0.5330, 0.4494, 0.4057], cx: 0.5307, cy: 0.7001, r: 0.0790, label: 'огонь в камине' },
+      { id: 'study_d2', patch: 'diff/sty-d2.png', crop: [0.6163, 0.3078, 0.3054, 0.4811], cx: 0.7645, cy: 0.4957, r: 0.0790, label: 'настольная лампа' },
+      { id: 'study_d3', patch: 'diff/sty-d3.png', crop: [0.1282, 0.1792, 0.0712, 0.1191], cx: 0.1618, cy: 0.2450, r: 0.0345, label: 'карманные часы на полке' },
+      { id: 'study_d4', patch: 'diff/sty-d4.png', crop: [0.4834, 0.0873, 0.0491, 0.0613], cx: 0.5072, cy: 0.1167, r: 0.0280, label: 'флаг на мачте корабля' },
+      { id: 'study_d5', patch: 'diff/sty-d5.png', crop: [0.0815, 0.1215, 0.1915, 0.1757], cx: 0.2207, cy: 0.2027, r: 0.0758, label: 'горящая свеча' }
+    ]
+  }
+  ];
+
+  var IMG_CACHE = Object.create(null);
+  function loadImg(src) {
+    if (!IMG_CACHE[src]) {
+      IMG_CACHE[src] = new Promise(function (resolve, reject) {
+        var im = new Image();
+        im.onload = function () { resolve(im); };
+        im.onerror = function () { reject(new Error('img load failed: ' + src)); };
+        im.src = src;
+      });
+    }
+    return IMG_CACHE[src];
+  }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function mount(container, opts) {
+    opts = opts || {};
+    var diffCount = Math.max(1, opts.diffCount || 5);
+    var TAP_BUDGET = 16;
+    container.innerHTML = '<div class="sd-meta"><span class="sd-pill">Загружаю сцену… 🎨</span></div>';
+
+    (async function () {
+      var scene = DIFF_SCENES[Math.floor(Math.random() * DIFF_SCENES.length)];
+      var baseImg;
+      try { baseImg = await loadImg(scene.base); }
+      catch (e) {
+        container.innerHTML =
+          '<div style="padding:18px; text-align:center; border:1px solid rgba(255,255,255,0.12); border-radius:14px;">' +
+            '<div style="font-weight:800; font-size:15px; margin-bottom:6px;">😵‍💫 Не удалось загрузить сцену</div>' +
+            '<div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Проверь соединение и попробуй снова.</div>' +
+            '<button class="btn btn-purple" id="sd-retry">🔄 Попробовать снова</button>' +
+          '</div>';
+        var retry = container.querySelector('#sd-retry');
+        if (retry) retry.onclick = function () { mount(container, opts); };
+        return;
+      }
+
+      // патчи (каждый может не загрузиться — тогда просто не участвует)
+      var patchImgs = await Promise.all(scene.diffs.map(function (d) {
+        return loadImg(d.patch).catch(function () { return null; });
+      }));
+      if (!container.isConnected) return; // экран ушёл, пока грузились картинки
+
+      var W = baseImg.naturalWidth || 1264, H = baseImg.naturalHeight || 848;
+
+      // кадр Б оффскрин
+      var comp = document.createElement('canvas');
+      comp.width = W; comp.height = H;
+      var cctx = comp.getContext('2d');
+      cctx.drawImage(baseImg, 0, 0, W, H);
+
+      var pool = scene.diffs
+        .map(function (d, i) { return { d: d, img: patchImgs[i] }; })
+        .filter(function (x) { return !!x.img; });
+      shuffle(pool);
+      var picks = pool.slice(0, Math.min(diffCount, pool.length));
+      picks.forEach(function (x) {
+        var d = x.d;
+        cctx.drawImage(x.img, d.crop[0] * W, d.crop[1] * H, d.crop[2] * W, d.crop[3] * H);
+      });
+
+      var pickObjs = picks.map(function (x) {
+        return {
+          id: x.d.id, cx: x.d.cx * W, cy: x.d.cy * H,
+          r: Math.max(34, Math.min(100, x.d.r * W)), label: x.d.label
+        };
+      });
+
+      var found = new Set();
+      var hearts = 3;
+      var taps = 0;
+      var tapTimes = [];
+      var finished = false;
+      var wrongFlashUntil = 0;
+
+      container.innerHTML =
+        '<div class="sd-meta">' +
+          '<span class="sd-pill" id="sd-hearts">❤️ ❤️ ❤️</span>' +
+          '<span class="sd-pill" id="sd-found">Найдено 0/' + pickObjs.length + '</span>' +
+          '<span class="sd-pill" id="sd-budget">👆 ' + TAP_BUDGET + '/' + TAP_BUDGET + '</span>' +
+          '<span class="sd-pill" style="opacity:.75">Двойной тап = лупа ×2</span>' +
+          '<button class="btn btn-ghost" id="sd-giveup" style="padding:4px 10px; font-size:11px;">Сдаться</button>' +
+        '</div>' +
+        '<div class="sd-board">' +
+          '<div class="sd-panel" data-side="A"><canvas width="' + W + '" height="' + H + '"></canvas><div class="sd-tag">КАДР A</div></div>' +
+          '<div class="sd-panel" data-side="B"><canvas width="' + W + '" height="' + H + '"></canvas><div class="sd-tag">КАДР Б</div></div>' +
+        '</div>';
+
+      var heartsEl = container.querySelector('#sd-hearts');
+      var foundEl = container.querySelector('#sd-found');
+      var budgetEl = container.querySelector('#sd-budget');
+      var panels = [].slice.call(container.querySelectorAll('.sd-panel'));
+
+      var views = {}, redraws = {};
+
+      function drawMarkers(ctx) {
+        pickObjs.forEach(function (o) {
+          if (!found.has(o.id)) return;
+          ctx.strokeStyle = '#ffd166';
+          ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.arc(o.cx, o.cy, o.r + 8, 0, Math.PI * 2); ctx.stroke();
+          var bx = o.cx + o.r, by = o.cy - o.r;
+          ctx.fillStyle = '#ffd166';
+          ctx.beginPath(); ctx.arc(bx, by, 15, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#0b1024';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(bx - 6.5, by); ctx.lineTo(bx - 1.5, by + 5.5); ctx.lineTo(bx + 8, by - 7.5);
+          ctx.stroke();
+        });
+      }
+
+      function makePanel(panel, variant) {
+        var canvas = panel.querySelector('canvas');
+        var ctx = canvas.getContext('2d');
+        var src = variant === 'A' ? baseImg : comp;
+        var view = { z: 1, cx: W / 2, cy: H / 2 };
+
+        function render() {
+          ctx.save();
+          ctx.fillStyle = '#0b1024';
+          ctx.fillRect(0, 0, W, H);
+          ctx.setTransform(view.z, 0, 0, view.z, W / 2 - view.cx * view.z, H / 2 - view.cy * view.z);
+          ctx.drawImage(src, 0, 0, W, H);
+          if (Date.now() < wrongFlashUntil) {
+            ctx.fillStyle = 'rgba(255,61,113,0.18)';
+            ctx.fillRect(0, 0, W, H);
+          }
+          drawMarkers(ctx);
+          ctx.restore();
+        }
+        redraws[variant] = render;
+        views[variant] = view;
+
+        var downPos = null, moved = false, lastTapAt = 0, lastTapPos = null;
+
+        function toScene(e) {
+          var rect = canvas.getBoundingClientRect();
+          var px = ((e.clientX - rect.left) / Math.max(1, rect.width)) * W;
+          var py = ((e.clientY - rect.top) / Math.max(1, rect.height)) * H;
+          return {
+            sceneX: views[variant].cx + (px - W / 2) / views[variant].z,
+            sceneY: views[variant].cy + (py - H / 2) / views[variant].z,
+            rect: rect
+          };
+        }
+        function panBy(dxPx, dyPx) {
+          var rect = canvas.getBoundingClientRect();
+          var v = views[variant];
+          v.cx -= (dxPx / Math.max(1, rect.width)) * (W / v.z);
+          v.cy -= (dyPx / Math.max(1, rect.height)) * (H / v.z);
+          v.cx = Math.max(W * 0.14, Math.min(W * 0.86, v.cx));
+          v.cy = Math.max(H * 0.16, Math.min(H * 0.84, v.cy));
+        }
+
+        canvas.addEventListener('pointerdown', function (e) {
+          if (finished) return;
+          e.preventDefault();
+          downPos = { x: e.clientX, y: e.clientY };
+          moved = false;
+          if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (_) {} }
+        });
+        canvas.addEventListener('pointermove', function (e) {
+          if (!downPos || views[variant].z === 1 || finished) return;
+          var dx = e.clientX - downPos.x, dy = e.clientY - downPos.y;
+          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
+          if (moved) {
+            panBy(dx, dy);
+            downPos = { x: e.clientX, y: e.clientY };
+            redraws[variant]();
+          }
+        });
+        canvas.addEventListener('pointerup', function (e) {
+          if (finished) { downPos = null; return; }
+          var start = downPos; downPos = null;
+          if (!start || moved) return;
+          var now = Date.now();
+          var p = toScene(e);
+          if (now - lastTapAt < 280 && lastTapPos && Math.hypot(p.sceneX - lastTapPos.x, p.sceneY - lastTapPos.y) < Math.max(70, W * 0.07)) {
+            if (views[variant].z > 1) { views[variant] = { z: 1, cx: W / 2, cy: H / 2 }; }
+            else {
+              views[variant].z = 2;
+              views[variant].cx = Math.max(W * 0.15, Math.min(W * 0.85, p.sceneX));
+              views[variant].cy = Math.max(H * 0.18, Math.min(H * 0.82, p.sceneY));
+            }
+            redraws[variant]();
+            lastTapAt = 0;
+            return;
+          }
+          lastTapAt = now;
+          lastTapPos = { x: p.sceneX, y: p.sceneY };
+          handleTap(p.sceneX, p.sceneY);
+        });
+
+        render();
+      }
+      panels.forEach(function (p) { makePanel(p, p.dataset.side); });
+
+      function redrawAll() {
+        Object.keys(redraws).forEach(function (k) { redraws[k](); });
+      }
+      function updateHud() {
+        heartsEl.textContent = hearts > 0 ? Array(hearts + 1).join('❤️ ').trim() : '💔';
+        foundEl.textContent = 'Найдено ' + found.size + '/' + pickObjs.length;
+        budgetEl.textContent = '👆 ' + Math.max(0, TAP_BUDGET - taps) + '/' + TAP_BUDGET;
+      }
+      function handleTap(x, y) {
+        if (finished) return;
+        taps++;
+        tapTimes.push(Date.now());
+        if (taps > TAP_BUDGET) { finish(false, 'touches'); return; }
+        var hit = null;
+        for (var i = 0; i < pickObjs.length; i++) {
+          var o = pickObjs[i];
+          if (Math.hypot(x - o.cx, y - o.cy) <= o.r + Math.max(10, W * 0.012)) { hit = o; break; }
+        }
+        if (hit && !found.has(hit.id)) {
+          found.add(hit.id);
+          if (window.SFX) { try { window.SFX.gem(found.size); } catch (_) {} }
+          if (found.size === pickObjs.length) {
+            redrawAll(); updateHud(); finish(true); return;
+          }
+        } else if (!hit) {
+          hearts--;
+          wrongFlashUntil = Date.now() + 450;
+          if (window.SFX) { try { window.SFX.wrong(); } catch (_) {} }
+          if (hearts <= 0) {
+            redrawAll(); updateHud(); finish(false, 'hearts'); return;
+          }
+          setTimeout(redrawAll, 460);
+        }
+        redrawAll(); updateHud();
+      }
+      function finish(isWin, reason) {
+        if (finished) return;
+        finished = true;
+        var anomaly = false;
+        if (isWin && tapTimes.length >= 4) {
+          var spanSec = Math.max(0.1, (tapTimes[tapTimes.length - 1] - tapTimes[0]) / 1000);
+          if (tapTimes.length / spanSec > 2.4) anomaly = true;
+        }
+        if (typeof opts.onDone === 'function') {
+          opts.onDone(isWin && !anomaly, {
+            heartsLeft: hearts,
+            taps: taps,
+            reason: anomaly ? 'anomaly' : reason,
+            labels: pickObjs.map(function (o) { return o.label; })
+          });
+        }
+      }
+      container.querySelector('#sd-giveup').onclick = function () {
+        if (finished) return;
+        finished = true;
+        if (typeof opts.onDone === 'function') {
+          opts.onDone(false, {
+            heartsLeft: hearts,
+            taps: taps,
+            reason: 'giveup',
+            labels: pickObjs.map(function (o) { return o.label; })
+          });
+        }
+      };
+    })().catch(function (err) {
+      console.error('[spot-diff] mount error', err);
+      container.innerHTML = '<div class="sd-load-err" style="padding:16px;">Произошла ошибка при рендере сцены. Попробуй другую сложность.</div>';
+    });
+
+    return { id: 'spot-diff' };
+  }
+
+  return { mount: mount };
+})();
+
 // === app.js ===
 // Main Application Router, Brain Trainer Arena (+ Non-Stop Blitz), Endless Lab/Prestige, Profile & Android Back Navigation
 window.App = (function () {
@@ -12265,6 +12667,7 @@ window.App = (function () {
         </div>
         <div class="filter-row" style="margin-bottom:14px;">
           <button class="filter-chip ${selectedCat === 'mix' ? 'active' : ''}" data-cat="mix">⚡ Умный Микс всех ${BrainTasks.CATEGORIES.length} тем</button>
+          <button class="filter-chip ${selectedCat === 'diff' ? 'active' : ''}" data-cat="diff">🕵️ Найди отличие</button>
           ${BrainTasks.CATEGORIES.map((c) => `
             <button class="filter-chip ${selectedCat === c.id ? 'active' : ''}" data-cat="${c.id}">${c.icon} ${c.name}</button>
           `).join('')}
@@ -12334,6 +12737,97 @@ window.App = (function () {
       spawnTaskInArena(main.querySelector('#earn-arena'));
     }
   }
+
+  // «Найди отличия» — спец-задание в Тренажёре (опция контролируется чипом data-cat="diff")
+  function runDiffTask(arena) {
+    if (!arena) return;
+    const st = AppState.get();
+    const diff = st.selectedDiff || 0;
+    const DIFF_CFG = [{ count: 4, seconds: 70 }, { count: 5, seconds: 60 }, { count: 6, seconds: 50 }, { count: 6, seconds: 40 }];
+    const dcfg = DIFF_CFG[diff] || DIFF_CFG[1];
+    const diffCount = dcfg.count;
+    const TOTAL = dcfg.seconds;
+    let startTs = Date.now();
+    let done = false;
+
+    arena.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-secondary);">
+        <span><b style="color:var(--cyan)">🕵️ Найди отличия</b> · ${BrainTasks.DIFFICULTIES[diff].name} · ${diffCount} отличия</span>
+        <span class="num" id="ta-timer" style="font-weight:800;">⏱️ ${TOTAL.toFixed(1)}с (лимит!)</span>
+      </div>
+      <div style="height:5px; background:rgba(255,255,255,0.08); border-radius:99px; margin-top:7px; overflow:hidden;">
+        <div id="ta-bar" style="height:100%; width:100%; background:linear-gradient(90deg, var(--emerald), var(--cyan)); transition:width 0.15s linear;"></div>
+      </div>
+      <div id="sd-body"></div>
+      <div id="ta-feedback" style="margin-top:12px;"></div>
+    `;
+    const timerEl = arena.querySelector('#ta-timer');
+    const barEl = arena.querySelector('#ta-bar');
+    const bodyEl = arena.querySelector('#sd-body');
+    const fbEl = arena.querySelector('#ta-feedback');
+
+    taskTimerIv = setInterval(() => {
+      if (done || !document.body.contains(arena)) { clearInterval(taskTimerIv); taskTimerIv = null; return; }
+      const rem = Math.max(0, TOTAL - (Date.now() - startTs) / 1000);
+      if (timerEl) {
+        timerEl.textContent = `⏱️ ${rem.toFixed(1)}с`;
+        timerEl.style.color = rem <= 10 ? 'var(--crimson)' : 'var(--text-secondary)';
+      }
+      if (barEl) {
+        barEl.style.width = `${(rem / TOTAL) * 100}%`;
+        if (rem <= 10) barEl.style.background = 'var(--crimson)';
+      }
+      if (rem <= 0) finishDiff(false, { reason: 'time' });
+    }, 100);
+
+    window.SpotDiff.mount(bodyEl, {
+      diffCount,
+      onDone: (isWin, stats) => finishDiff(isWin, stats)
+    });
+
+    function finishDiff(isWin, stats = {}) {
+      if (done) return;
+      done = true;
+      if (taskTimerIv) { clearInterval(taskTimerIv); taskTimerIv = null; }
+      const elapsed = (Date.now() - startTs) / 1000;
+      const heartsPart = Math.max(0, stats.heartsLeft || 0) / 3;
+      const speedPart = Math.max(0, 1 - elapsed / TOTAL);
+      const speedRatio = Math.max(0, Math.min(1, clamp01(heartsPart * 0.5 + speedPart * 0.5)));
+      const res = AppState.recordTaskResult({ correct: isWin, category: 'memory', diffIdx: diff, speedRatio });
+      refreshStreakHeader();
+      const reasonText = {
+        time: '⏱️ Время вышло', hearts: '💔 Закончились все сердца', touches: '👆 Исчерпан лимит касаний',
+        giveup: 'Сдался', anomaly: '🛡️ Слишком быстрая серия касаний — очки не начислены (анти-спам)'
+      }[stats.reason] || 'Задание не выполнено';
+      if (isWin) {
+        SFX.correct();
+        fbEl.innerHTML = `
+          <div style="background:rgba(0,230,118,0.13); border:1px solid rgba(0,230,118,0.4); border-radius:14px; padding:12px;">
+            <div style="font-weight:800; color:var(--emerald); font-size:15px;">✅ Все отличия найдены! +${GameCore.fmt(res.earnedCoins)} 🪙 и +${res.earnedXp} XP</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Отличия были: ${(stats.labels || []).map(l => '✓ ' + l).join(' · ')}</div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="btn btn-emerald btn-lg" id="ta-next" style="flex:2">Следующее задание ⚡</button>
+            <button class="btn btn-gold" id="ta-play-casino" style="flex:1">🎰 В казино</button>
+          </div>
+        `;
+      } else {
+        SFX.wrong();
+        fbEl.innerHTML = `
+          <div style="background:rgba(255,61,113,0.13); border:1px solid rgba(255,61,113,0.4); border-radius:14px; padding:12px;">
+            <div style="font-weight:800; color:var(--crimson); font-size:15px;">❌ ${reasonText}</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Подсказка: отличия прячутся в мелочах — цвет, положение, наличие предмета. Двойной тап по кадру — лупа.</div>
+          </div>
+          <button class="btn btn-purple btn-lg btn-block" id="ta-next" style="margin-top:10px;">Следующее задание →</button>
+        `;
+      }
+      const nextB = fbEl.querySelector('#ta-next');
+      if (nextB) nextB.onclick = () => spawnTaskInArena(arena);
+      const goCas = fbEl.querySelector('#ta-play-casino');
+      if (goCas) goCas.onclick = () => navigate('lobby');
+    }
+  }
+  function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
   function refreshStreakHeader() {
     const streakBanner = document.querySelector('.streak-banner');
@@ -12486,6 +12980,10 @@ window.App = (function () {
     if (taskTimerIv) {
       clearInterval(taskTimerIv);
       taskTimerIv = null;
+    }
+    if (selectedCat === 'diff') {
+      runDiffTask(arena);
+      return;
     }
 
     const st = AppState.get();
