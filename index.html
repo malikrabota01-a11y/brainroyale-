@@ -6592,6 +6592,7 @@ window.GameCore = (function () {
       }
 
       function spawnSparks(x, y, color, power) {
+        if (sparks.length > 110) sparks.splice(0, sparks.length - 110);
         var n = power ? 22 : 12;
         for (var i = 0; i < n; i++) {
           var ang = Math.random() * Math.PI * 2;
@@ -6600,8 +6601,15 @@ window.GameCore = (function () {
         }
       }
 
-      function drawBoard() {
-        const W = canvas.width, H = canvas.height;
+      // --- кэш статичного слоя (фон + пыль + рельсы + штырьки + корзины) ---
+      const staticCanvas = document.createElement('canvas');
+      staticCanvas.width = canvas.width;
+      staticCanvas.height = canvas.height;
+      const sctx = staticCanvas.getContext('2d');
+
+      function buildStatic() {
+        const ctx = sctx;
+        const W = staticCanvas.width, H = staticCanvas.height;
         // --- фон: глубокий космос с виньеткой ---
         const bg = ctx.createRadialGradient(W / 2, H * 0.3, 24, W / 2, H * 0.55, H);
         bg.addColorStop(0, '#131f42');
@@ -6661,30 +6669,53 @@ window.GameCore = (function () {
           const bw = bStepX - 3;
           const isEdge = Math.abs(i - (totalB - 1) / 2) / ((totalB - 1) / 2);
           const base = isEdge > 0.72 ? '#ff3d71' : isEdge > 0.38 ? '#ffb800' : '#00e676';
-          const isFlashing = flashBucket === i && Date.now() < flashTimer;
           const grad = ctx.createLinearGradient(0, bY, 0, bY + 26);
-          if (isFlashing) {
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(1, '#ffe9a8');
-          } else {
-            grad.addColorStop(0, base);
-            grad.addColorStop(1, 'rgba(8,12,24,0.85)');
-          }
+          grad.addColorStop(0, base);
+          grad.addColorStop(1, 'rgba(8,12,24,0.85)');
           ctx.beginPath();
           if (ctx.roundRect) ctx.roundRect(bx - bw / 2, bY, bw, 26, 6);
           else ctx.rect(bx - bw / 2, bY, bw, 26);
           ctx.fillStyle = grad;
-          if (isFlashing) { ctx.shadowColor = '#fff3b0'; ctx.shadowBlur = 20; }
           ctx.fill();
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = isFlashing ? '#ffffff' : 'rgba(255,255,255,0.28)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.28)';
           ctx.lineWidth = 1;
           ctx.stroke();
-          ctx.fillStyle = isFlashing ? '#080d1c' : '#ffffff';
+          ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${rows === 16 ? 9 : 10}px monospace`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(`${m}x`, bx, bY + 13);
+        }
+      }
+
+      function drawBoard() {
+        const W = canvas.width, H = canvas.height;
+        ctx.drawImage(staticCanvas, 0, 0);
+        // координаты корзин для динамики (шары/вспышка/искры)
+        const mults = PLINKO_MULTS[rows][risk];
+        const refP = pegPos(rows - 1, 0, W, H);
+        const bStepX = refP.stepX;
+        const totalB = mults.length;
+        const startBX = W / 2 - ((totalB - 1) * bStepX) / 2;
+        const bY = H - 40;
+        // --- вспышка выигрышной корзины (поверх кэш-слоя) ---
+        if (flashBucket >= 0 && Date.now() < flashTimer) {
+          const bw = bStepX - 3;
+          const bx = startBX + flashBucket * bStepX;
+          ctx.save();
+          ctx.shadowColor = '#fff3b0';
+          ctx.shadowBlur = 22;
+          ctx.fillStyle = '#fff6d8';
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(bx - bw / 2, bY, bw, 26, 6);
+          else ctx.rect(bx - bw / 2, bY, bw, 26);
+          ctx.fill();
+          ctx.restore();
+          ctx.fillStyle = '#080d1c';
+          ctx.font = `bold ${rows === 16 ? 9 : 10}px monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${mults[flashBucket]}x`, bx, bY + 13);
         }
 
         // --- искры ---
@@ -6815,7 +6846,9 @@ window.GameCore = (function () {
       }
 
       function dropBall(bet) {
-        if (!AppState.placeBet(bet, 'plinko')) {
+        const totalBet = bet * batch; // волна ×N: полная ставка списывается один раз (как и написано на кнопке)
+        if (!AppState.placeBet(totalBet, 'plinko')) {
+          if (window.UI && UI.toast) UI.toast(`Недостаточно монет для волны ×${batch} (нужно ${totalBet} 🪙)`, 'loss');
           renderControls();
           return;
         }
@@ -6900,6 +6933,7 @@ window.GameCore = (function () {
             if (balls.length > 0) return;
             SFX.tap();
             risk = b.dataset.r;
+            buildStatic();
             drawBoard();
             renderControls();
           };
@@ -6917,12 +6951,14 @@ window.GameCore = (function () {
             if (balls.length > 0) return;
             SFX.tap();
             rows = Number(b.dataset.n);
+            buildStatic();
             drawBoard();
             renderControls();
           };
         });
       }
 
+      buildStatic();
       drawBoard();
       renderControls();
     }
