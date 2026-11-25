@@ -10996,6 +10996,17 @@ window.SocialArena = (function () {
     } catch (e) {}
   }
 
+  function escHtmlSafe(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function frameSpan(name, cores) {
+    const f = window.BRPrestige && window.BRPrestige.frameFor(cores);
+    const safe = escHtmlSafe(name);
+    if (!f) return `<span>${safe}</span>`;
+    return `<span style="color:${f.color}; text-shadow:0 0 10px ${f.color}; font-weight:800;" title="Рамка: ${escHtmlSafe(f.name)}">${f.icon} ${safe}</span>`;
+  }
+
   function computeRoastTitle(p, idx) {
     if (p.coins <= 0) return '📉 Мамкин Инвестор (0 🪙)';
     if (p.coins < 150) return '🪙 Попрошайка на вокзале';
