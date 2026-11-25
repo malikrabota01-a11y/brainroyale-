@@ -2016,6 +2016,18 @@ window.FX = (function () {
       const a = Math.round(amount || 0);
       const mult = Number(multiplier) || 1;
       const jb = Math.round(jackpotBonus || 0);
+      // Одна большая фанфара раз в 2.6 с (важно для «волн» Плинко: десятки выигрышей подряд).
+      // Джекпот звучит всегда; всё остальное в окне 2.6 с — тихая монетка.
+      const nowFx = Date.now();
+      const bigReady = nowFx - Number(window.BR_FX_LAST_BIG || 0) >= 2600;
+      const armBig = () => { window.BR_FX_LAST_BIG = nowFx; return true; };
+      const coinQuiet = () => {
+        window.BR_FX_LAST_COIN = window.BR_FX_LAST_COIN || 0;
+        if (nowFx - window.BR_FX_LAST_COIN > 250 && window.SFX && window.SFX.coin) {
+          window.SFX.coin();
+          window.BR_FX_LAST_COIN = nowFx;
+        }
+      };
       if ((jb > 0 || mult >= 10 || a >= 2500) && window.UI && typeof window.UI.toast === 'function') {
         const MEMES = [
           '🤖 Робот: «Невероятно… банку плохо»',
@@ -2030,6 +2042,7 @@ window.FX = (function () {
         setTimeout(() => { try { window.UI.toast(MEMES[Math.floor(Math.random() * MEMES.length)], 'gold'); } catch (_) {} }, 1100);
       }
       if (jb > 0) {
+        armBig();
         confetti(95);
         bigWinBanner('МЕГА-ДЖЕКПОТ!', '+' + fmtN(jb) + ' 🪙 · x' + mult.toFixed(1), 'mega');
         flash('rgba(255, 200, 60, 0.32)');
@@ -2037,6 +2050,7 @@ window.FX = (function () {
         return;
       }
       if (mult >= 25 || a >= 10000) {
+        armBig();
         confetti(70);
         bigWinBanner('MEGA WIN!', '+' + fmtN(a) + ' 🪙 · x' + mult.toFixed(1), 'mega');
         flash('rgba(255, 196, 0, 0.28)');
@@ -2044,17 +2058,21 @@ window.FX = (function () {
         return;
       }
       if (mult >= 10 || a >= 2500) {
+        if (!bigReady) { coinQuiet(); return; }
+        armBig();
         confetti(45);
         bigWinBanner('BIG WIN!', '+' + fmtN(a) + ' 🪙', 'big');
         flash('rgba(255, 214, 90, 0.2)');
         return;
       }
       if (mult >= 5 || a >= 800) {
+        if (!bigReady) { coinQuiet(); return; }
+        armBig();
         confetti(22);
         bigWinBanner('КРУПНЫЙ ВЫИГРЫШ', '+' + fmtN(a) + ' 🪙', 'normal');
         return;
       }
-      if (window.SFX && window.SFX.coin) window.SFX.coin();
+      coinQuiet();
     } catch (_) {}
   }
 
@@ -6592,8 +6610,8 @@ window.GameCore = (function () {
       }
 
       function spawnSparks(x, y, color, power) {
-        if (sparks.length > 110) sparks.splice(0, sparks.length - 110);
-        var n = power ? 22 : 12;
+        if (sparks.length > 40) sparks.splice(0, sparks.length - 40);
+        var n = power ? 10 : 6;
         for (var i = 0; i < n; i++) {
           var ang = Math.random() * Math.PI * 2;
           var spd = 1 + Math.random() * (power ? 3.6 : 2.4);
@@ -6763,7 +6781,7 @@ window.GameCore = (function () {
 
           b.trail = b.trail || [];
           b.trail.push({ x: bx, y: by });
-          if (b.trail.length > 7) b.trail.shift();
+          if (b.trail.length > 4) b.trail.shift();
           for (let t = 0; t < b.trail.length - 1; t++) {
             const tp = b.trail[t];
             ctx.globalAlpha = (t / b.trail.length) * 0.35;
@@ -6784,7 +6802,7 @@ window.GameCore = (function () {
           ctx.arc(bx, by, brad, 0, Math.PI * 2);
           ctx.fillStyle = bg2;
           ctx.shadowColor = '#ffb800';
-          ctx.shadowBlur = 13;
+          ctx.shadowBlur = 8;
           ctx.fill();
           ctx.shadowBlur = 0;
           ctx.fillStyle = 'rgba(255,255,255,0.95)';
