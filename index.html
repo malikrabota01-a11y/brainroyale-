@@ -49,7 +49,7 @@
   <title>BrainRoyale — Умное Казино & Битва Друзей (v2.11.0)</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="BrainRoyale — Умное Казино 🧠🎰" />
-  <meta property="og:description" content="Монеты только за решение задач! 20 игр, 7 тренажёров мозга, 0₽ донатов." />
+  <meta property="og:description" content="Монеты только за решение задач! 22 игры, 7 тренажёров мозга, 0₽ донатов." />
   <meta property="og:locale" content="ru_RU" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
@@ -2010,7 +2010,7 @@ window.FX = (function () {
     setTimeout(() => f.remove(), 400);
   }
 
-  // Единая точка для всех 20 игр: вызывается из AppState.winPayout
+  // Единая точка для всех 22 игр: вызывается из AppState.winPayout
   function onWin(amount, multiplier, jackpotBonus) {
     try {
       const a = Math.round(amount || 0);
@@ -6125,14 +6125,14 @@ window.GameCore = (function () {
   const slotSymImg = (id) => 'assets/games/slots/symbols/' + id + '.jpg';
   const SLOT_SYMBOLS = [
     { id: 'wild', icon: '🧠', img: slotSymImg('wild'), mult3: 18, mult4: 60, mult5: 220, weight: 2 },
-    { id: 'seven', icon: '7️⃣', img: slotSymImg('seven'), mult3: 12, mult4: 40, mult5: 140, weight: 4 },
+    { id: 'seven', icon: '7️⃣', img: slotSymImg('seven'), mult3: 12, mult4: 40, mult5: 140, weight: 3.5 },
     { id: 'gem', icon: '💎', img: slotSymImg('gem'), mult3: 8, mult4: 24, mult5: 75, weight: 7 },
     { id: 'bell', icon: '🔔', img: slotSymImg('bell'), mult3: 5, mult4: 14, mult5: 40, weight: 11 },
     { id: 'clover', icon: '🍀', img: slotSymImg('clover'), mult3: 3.5, mult4: 9, mult5: 25, weight: 15 },
-    { id: 'cherry', icon: '🍒', img: slotSymImg('cherry'), mult3: 2.2, mult4: 5.5, mult5: 15, weight: 20 },
-    { id: 'lemon', icon: '🍋', img: slotSymImg('lemon'), mult3: 1.5, mult4: 4, mult5: 10, weight: 24 },
-    { id: 'plum', icon: '🍇', img: slotSymImg('plum'), mult3: 1.2, mult4: 3, mult5: 8, weight: 26 },
-    { id: 'scatter', icon: '⚛️', img: slotSymImg('scatter'), mult3: 2, mult4: 8, mult5: 25, weight: 3 }
+    { id: 'cherry', icon: '🍒', img: slotSymImg('cherry'), mult3: 2.2, mult4: 5.5, mult5: 15, weight: 24 },
+    { id: 'lemon', icon: '🍋', img: slotSymImg('lemon'), mult3: 1.5, mult4: 4, mult5: 10, weight: 28 },
+    { id: 'plum', icon: '🍇', img: slotSymImg('plum'), mult3: 1.2, mult4: 3, mult5: 8, weight: 31 },
+    { id: 'scatter', icon: '⚛️', img: slotSymImg('scatter'), mult3: 2, mult4: 8, mult5: 25, weight: 4 }
   ];
 
   const PAYLINES = [
@@ -6158,7 +6158,7 @@ window.GameCore = (function () {
     tagColor: '#8c52ff',
     glow: '#8c52ff',
     maxWin: 'x1000',
-    rtp: '94.2%',
+    rtp: '98%',
     desc: '5 барабанов, 9 линий, 🧠 Wild-замена и 3+ ⚛️ Скаттера запускают 5 Фриспинов с x2!',
     mathInfo: 'Каждый из 5 барабанов крутится независимо со взвешенной таблицей вероятностей. 9 активных линий проверяются слева направо от 3 совпадений. Символ 🧠 заменяет любой символ, кроме ⚛️.',
     unmount() {
@@ -8961,17 +8961,17 @@ window.GameCore = (function () {
     { id: 'diamond', icon: '💎', label: 'Алмаз. кирка (5 уд.)', hits: 5, weight: 1.9, color: '#22d3ee' },
     { id: 'tnt', icon: '🧨', label: 'TNT Взрыв (+)', hits: 2, weight: 2.3, color: '#ef4444' },
     { id: 'book', icon: '📖', label: 'Чары Wild (+2 уд.)', hits: 0, weight: 1.9, color: '#c084fc' },
-    { id: 'ender', icon: '👁️', label: 'Scatter Блок-Бонус', hits: 0, weight: 1.3, color: '#34d399' }
+    { id: 'ender', icon: '👁️', label: 'Scatter Блок-Бонус', hits: 0, weight: 1.7, color: '#34d399' }
   ];
 
   // 6 armored rows of blocks from top (row 0) to bottom (row 5) — 15 HP per column!
   const BLOCK_TIERS = [
-    { name: 'Земля', hp: 1, pay: 0.06, fill: '#6d4c3d', top: '#4caf50', speck: '#4e342e' },
-    { name: 'Камень', hp: 2, pay: 0.12, fill: '#64748b', top: '#94a3b8', speck: '#334155' },
-    { name: 'Железо', hp: 2, pay: 0.22, fill: '#57534e', top: '#a8a29e', speck: '#fdba74' },
-    { name: 'Золото', hp: 3, pay: 0.42, fill: '#52525b', top: '#71717a', speck: '#facc15' },
-    { name: 'Алмазы', hp: 3, pay: 0.78, fill: '#334155', top: '#475569', speck: '#22d3ee' },
-    { name: 'Обсидиан', hp: 4, pay: 1.50, fill: '#1e1b4b', top: '#312e81', speck: '#a855f7' }
+    { name: 'Земля', hp: 1, pay: 0.07, fill: '#6d4c3d', top: '#4caf50', speck: '#4e342e' },
+    { name: 'Камень', hp: 2, pay: 0.14, fill: '#64748b', top: '#94a3b8', speck: '#334155' },
+    { name: 'Железо', hp: 2, pay: 0.25, fill: '#57534e', top: '#a8a29e', speck: '#fdba74' },
+    { name: 'Золото', hp: 3, pay: 0.48, fill: '#52525b', top: '#71717a', speck: '#facc15' },
+    { name: 'Алмазы', hp: 3, pay: 0.90, fill: '#334155', top: '#475569', speck: '#22d3ee' },
+    { name: 'Обсидиан', hp: 4, pay: 1.72, fill: '#1e1b4b', top: '#312e81', speck: '#a855f7' }
   ];
 
   const CHEST_MULTS = [
@@ -9813,26 +9813,64 @@ window.GameCore = (function () {
         const badgeEl = root.querySelector('#cs-badge');
         const betPanel = root.querySelector('#cs-bet');
 
+        // CSS для ячеек — один раз на страницу (вместо inline cssText на каждую перерисовку)
+        if (!document.getElementById('cs-cells-style')) {
+          const st = document.createElement('style');
+          st.id = 'cs-cells-style';
+          st.textContent = `
+            .cs-cell{height:46px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);transform:scale(1);transition:transform .16s ease, background .16s ease, border-color .16s ease;position:relative;}
+            .cs-cell.cs-orb{background:rgba(255,184,0,0.22);border-color:#ffb800;}
+            .cs-cell.cs-hit{background:rgba(0,230,118,0.28);border-color:#00e676;transform:scale(1.06);}
+            .cs-cell.cs-drop{animation:cellDropIn .34s cubic-bezier(.2,.9,.3,1.05);}
+          `;
+          document.head.appendChild(st);
+        }
+
+        // Стойкие 30 ячеек: создаём один раз, дальше обновляем только изменившиеся.
+        // Раньше на КАЖДЫЙ каскадный шаг все 30 div пересоздавались и анимация cellDropIn перезапускалась у всех.
+        function ensureCsCells() {
+          gridEl.innerHTML = '';
+          const cells = [];
+          for (let r = 0; r < 5; r++) {
+            cells[r] = [];
+            for (let c = 0; c < 6; c++) {
+              const el = document.createElement('div');
+              el.className = 'cs-cell';
+              gridEl.appendChild(el);
+              cells[r][c] = { el, contentSig: '', hitOrb: null };
+            }
+          }
+          gridEl._cells = cells;
+        }
+
         function renderGrid() {
           if (!document.body.contains(gridEl)) return;
-          gridEl.innerHTML = '';
+          if (!gridEl._cells) ensureCsCells();
           for (let r = 0; r < 5; r++) {
             for (let c = 0; c < 6; c++) {
               const cell = grid[c][r];
-              const el = document.createElement('div');
               const isHit = highlightKeys.has(`${c}_${r}`);
               const isOrb = cell.id === 'orb';
-              el.style.cssText = `
-                height:46px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-                background:${isHit ? 'rgba(0,230,118,0.28)' : isOrb ? 'rgba(255,184,0,0.22)' : 'rgba(255,255,255,0.04)'};
-                border:1px solid ${isHit ? '#00e676' : isOrb ? '#ffb800' : 'rgba(255,255,255,0.07)'};
-                transform:${isHit ? 'scale(1.06)' : 'scale(1)'}; transition:all 0.16s; position:relative; animation:cellDropIn 0.34s cubic-bezier(0.2,0.9,0.3,1.05);
-              `;
-              el.innerHTML = `
-                <span style="font-size:${isOrb ? '17px' : '22px'}; line-height:1;">${cell.icon}</span>
-                ${isOrb ? `<span class="num" style="font-size:10px; font-weight:900; color:#fde047;">x${cell.multOrb}</span>` : ''}
-              `;
-              gridEl.appendChild(el);
+              const hitOrb = isHit ? 'h' : isOrb ? 'o' : '';
+              const contentSig = cell.id + '|' + (cell.multOrb || '');
+              const entry = gridEl._cells[r][c];
+              const el = entry.el;
+              const contentChanged = entry.contentSig !== contentSig;
+              if (!contentChanged && entry.hitOrb === hitOrb) continue; // ячейка не менялась — DOM не трогаем
+              entry.contentSig = contentSig;
+              entry.hitOrb = hitOrb;
+              const cls = 'cs-cell' + (isOrb ? ' cs-orb' : '') + (isHit ? ' cs-hit' : '');
+              if (contentChanged) {
+                el.className = cls;
+                void el.offsetWidth; // reflow: перезапускаем cellDropIn только у этой ячейки
+                el.className = cls + ' cs-drop';
+                el.innerHTML = `
+                  <span style="font-size:${isOrb ? '17px' : '22px'}; line-height:1;">${cell.icon}</span>
+                  ${isOrb ? `<span class="num" style="font-size:10px; font-weight:900; color:#fde047;">x${cell.multOrb}</span>` : ''}
+                `;
+              } else {
+                el.className = cls; // только подсветка/снятие подсветки — без перезапуска анимации
+              }
             }
           }
           if (freeSpins > 0) {
@@ -9949,10 +9987,13 @@ window.GameCore = (function () {
 
           let appliedMult = 1;
           let nextGlobalFsMult = globalFsMult;
+          const fsCap = cfg.fsCap || 50;
           if (baseWinMult > 0) {
             if (isFS && cfg.persistentMult) {
               if (orbSum > 0) nextGlobalFsMult += orbSum;
-              appliedMult = Math.max(1, nextGlobalFsMult);
+              appliedMult = Math.min(fsCap, Math.max(1, nextGlobalFsMult));
+            } else if (orbSum > 0 && isFS) {
+              appliedMult = Math.min(fsCap, orbSum);
             } else if (orbSum > 0) {
               appliedMult = orbSum;
             }
@@ -10144,16 +10185,17 @@ window.GameCore = (function () {
     tagColor: '#00d4ff',
     glow: '#00d4ff',
     maxWin: 'x5000',
-    rtp: '94.3%',
+    rtp: '94%',
     fsAward: 15,
     buyMult: 100,
     persistentMult: true,
     orbIcon: '🔮',
     orbChanceBase: 0.012,
-    orbChanceFS: 0.135,
+    orbChanceFS: 0.010,
+    fsCap: 5,
     basePayScale: 0.65,
     fsPayBoost: 1.27,
-    scatterChanceBase: 0.030,
+    scatterChanceBase: 0.038,
     scatterChanceFS: 0.015,
     orbMultipliers: [
       { mult: 2, weight: 44 }, { mult: 3, weight: 25 }, { mult: 5, weight: 14 },
@@ -10162,18 +10204,18 @@ window.GameCore = (function () {
     ],
     scatterSym: { id: 'scatter', icon: '🧔‍♂️', weight: 1 },
     symbols: [
-      { id: 'crown', icon: '👑', p8: 2.45, p10: 6.0, p12: 16.0, weight: 6 },
-      { id: 'hourglass', icon: '⏳', p8: 1.48, p10: 3.7, p12: 10.0, weight: 8 },
+      { id: 'crown', icon: '👑', p8: 2.45, p10: 6.0, p12: 16.0, weight: 5 },
+      { id: 'hourglass', icon: '⏳', p8: 1.48, p10: 3.7, p12: 10.0, weight: 7 },
       { id: 'ring', icon: '💍', p8: 1.00, p10: 2.45, p12: 6.6, weight: 10 },
       { id: 'chalice', icon: '🏆', p8: 0.70, p10: 1.70, p12: 4.4, weight: 12 },
       { id: 'redgem', icon: '♦️', p8: 0.45, p10: 1.00, p12: 2.65, weight: 15 },
-      { id: 'purpgem', icon: '🟣', p8: 0.35, p10: 0.77, p12: 2.00, weight: 17 },
-      { id: 'yellowgem', icon: '🟡', p8: 0.28, p10: 0.62, p12: 1.62, weight: 19 },
-      { id: 'greengem', icon: '🟢', p8: 0.22, p10: 0.50, p12: 1.26, weight: 21 },
-      { id: 'bluegem', icon: '🔵', p8: 0.18, p10: 0.41, p12: 1.00, weight: 23 }
+      { id: 'purpgem', icon: '🟣', p8: 0.35, p10: 0.77, p12: 2.00, weight: 18 },
+      { id: 'yellowgem', icon: '🟡', p8: 0.28, p10: 0.62, p12: 1.62, weight: 21 },
+      { id: 'greengem', icon: '🟢', p8: 0.22, p10: 0.50, p12: 1.26, weight: 25 },
+      { id: 'bluegem', icon: '🔵', p8: 0.18, p10: 0.41, p12: 1.00, weight: 29 }
     ],
     desc: 'Каскады 6×5 из 9 символов! Сферы Зевса от x2 до x500 и 15 Фриспинов с накопительным множителем!',
-    mathInfo: 'Система Pay-Anywhere 6×5: 8 и более одинаковых символов из 9 видов взрываются, запуская лавину. Сферы Зевса 🔮 (x2..x500) суммируются и умножают весь улов спина. В 15 Фриспинах сыгравшие сферы прибавляются к общему множителю бонуса!'
+    mathInfo: 'Система Pay-Anywhere 6×5: 8 и более одинаковых символов из 9 видов взрываются, запуская лавину. Сферы Зевса 🔮 (x2..x500) суммируются и умножают весь улов спина. В 15 Фриспинах сыгравшие сферы прибавляются к общему множителю бонуса (накопительный множитель бонуса ограничен x5).'
   });
 
   // 18. SWEET BONANZA (САХАРНАЯ ЛАВИНА 6x5)
@@ -10185,16 +10227,17 @@ window.GameCore = (function () {
     tagColor: '#ff3d71',
     glow: '#ff3d71',
     maxWin: 'x5000',
-    rtp: '94.4%',
+    rtp: '93%',
     fsAward: 12,
     buyMult: 100,
     persistentMult: false,
     orbIcon: '💣',
     orbChanceBase: 0.008,
-    orbChanceFS: 0.24,
+    orbChanceFS: 0.010,
+    fsCap: 6,
     basePayScale: 0.80,
     fsPayBoost: 4.10,
-    scatterChanceBase: 0.028,
+    scatterChanceBase: 0.036,
     scatterChanceFS: 0.022,
     orbMultipliers: [
       { mult: 3, weight: 26 }, { mult: 5, weight: 22 }, { mult: 10, weight: 18 },
@@ -10203,33 +10246,33 @@ window.GameCore = (function () {
     ],
     scatterSym: { id: 'scatter', icon: '🍭', weight: 1 },
     symbols: [
-      { id: 'heart', icon: '❤️', p8: 1.72, p10: 4.3, p12: 11.0, weight: 6 },
-      { id: 'candy', icon: '🍬', p8: 1.00, p10: 2.5, p12: 6.5, weight: 8 },
+      { id: 'heart', icon: '❤️', p8: 1.72, p10: 4.3, p12: 11.0, weight: 5 },
+      { id: 'candy', icon: '🍬', p8: 1.00, p10: 2.5, p12: 6.5, weight: 7 },
       { id: 'lolly', icon: '🍫', p8: 0.65, p10: 1.6, p12: 4.3, weight: 10 },
       { id: 'melon', icon: '🍉', p8: 0.45, p10: 1.1, p12: 2.75, weight: 12 },
       { id: 'grape', icon: '🍇', p8: 0.32, p10: 0.76, p12: 1.95, weight: 15 },
-      { id: 'apple', icon: '🍎', p8: 0.23, p10: 0.55, p12: 1.38, weight: 17 },
-      { id: 'peach', icon: '🍑', p8: 0.18, p10: 0.43, p12: 1.00, weight: 19 },
-      { id: 'banana', icon: '🍌', p8: 0.14, p10: 0.33, p12: 0.76, weight: 21 },
-      { id: 'berry', icon: '🍓', p8: 0.10, p10: 0.25, p12: 0.58, weight: 23 }
+      { id: 'apple', icon: '🍎', p8: 0.23, p10: 0.55, p12: 1.38, weight: 18 },
+      { id: 'peach', icon: '🍑', p8: 0.18, p10: 0.43, p12: 1.00, weight: 21 },
+      { id: 'banana', icon: '🍌', p8: 0.14, p10: 0.33, p12: 0.76, weight: 25 },
+      { id: 'berry', icon: '🍓', p8: 0.10, p10: 0.25, p12: 0.58, weight: 29 }
     ],
-    desc: 'Хардкорные каскады 6×5! 4× 🍭 Леденца открывают 10 Фриспинов с радужными бомбами от x2 до x100!',
-    mathInfo: 'Любые 8+ одинаковых сладостей из 9 видов на поле 6×5 запускают цепную реакцию лавин. Во время 10 Фриспинов выпадают радужные бомбы 💣 от x2 до x100, которые складываются и умножают сумму всех лавин спина!'
+    desc: 'Хардкорные каскады 6×5! 4× 🍭 Леденца открывают 12 Фриспинов с радужными бомбами от x3 до x100!',
+    mathInfo: 'Любые 8+ одинаковых сладостей из 9 видов на поле 6×5 запускают цепную реакцию лавин. Во время 12 Фриспинов выпадают радужные бомбы 💣 от x3 до x100, которые складываются и умножают сумму всех лавин спина (множитель бомб в спине бонуса ограничен x6).'
   });
 
   // =========================================================================
   // 19. THE DOG HOUSE: БУДКА С ЛИПКИМИ ВАЙЛДАМИ (Sticky Multiplier Wilds 2x/3x!)
   // =========================================================================
   const DOG_SYMS = [
-    { id: 'rott', icon: '🐕', m3: 2.1, m4: 6.0, m5: 21, weight: 5 },
-    { id: 'pug', icon: '🐶', m3: 1.4, m4: 4.0, m5: 14, weight: 7 },
-    { id: 'shih', icon: '🐩', m3: 0.95, m4: 2.8, m5: 9.5, weight: 9 },
-    { id: 'collar', icon: '📿', m3: 0.65, m4: 1.7, m5: 5.6, weight: 12 },
-    { id: 'bone', icon: '🦴', m3: 0.42, m4: 1.2, m5: 3.6, weight: 15 },
-    { id: 'ace', icon: '🅰️', m3: 0.28, m4: 0.76, m5: 2.2, weight: 18 },
-    { id: 'king', icon: '🅺', m3: 0.22, p4: 0.64, m4: 0.64, m5: 1.8, weight: 20 },
-    { id: 'queen', icon: '🆀', m3: 0.18, m4: 0.48, m5: 1.4, weight: 22 },
-    { id: 'jack', icon: '🅹', m3: 0.14, m4: 0.40, m5: 1.1, weight: 24 }
+    { id: 'rott', icon: '🐕', m3: 6.51, m4: 18.6, m5: 65.1, weight: 4 },
+    { id: 'pug', icon: '🐶', m3: 4.34, m4: 12.4, m5: 43.4, weight: 6 },
+    { id: 'shih', icon: '🐩', m3: 2.94, m4: 8.68, m5: 29.45, weight: 8 },
+    { id: 'collar', icon: '📿', m3: 2.02, m4: 5.27, m5: 17.36, weight: 12 },
+    { id: 'bone', icon: '🦴', m3: 1.3, m4: 3.72, m5: 11.16, weight: 15 },
+    { id: 'ace', icon: '🅰️', m3: 0.87, m4: 2.36, m5: 6.82, weight: 20 },
+    { id: 'king', icon: '🅺', m3: 0.68, p4: 0.64, m4: 1.98, m5: 5.58, weight: 23 },
+    { id: 'queen', icon: '🆀', m3: 0.56, m4: 1.49, m5: 4.34, weight: 26 },
+    { id: 'jack', icon: '🅹', m3: 0.43, m4: 1.24, m5: 3.41, weight: 29 }
   ];
 
   const LINES_10 = [
@@ -10249,7 +10292,7 @@ window.GameCore = (function () {
     tagColor: '#ffb800',
     glow: '#ffb800',
     maxWin: 'x6750',
-    rtp: '94.3%',
+    rtp: '94%',
     desc: 'Будки-Вайлды 🏠 с иксами ×2 и ×3 на барабанах 2-3-4! В Фриспинах все Вайлды прилипают до конца бонуски!',
     mathInfo: 'На средних барабанах (2, 3, 4) выпадают Будки-Вайлды 🏠 с множителем ×2 или ×3. Если на линии несколько Будок, их множители складываются (до ×9 на линию!). 3× 🐾 Лапки на барабанах 1, 3, 5 запускают 9–14 Фриспинов с ЛИПКИМИ Вайлдами (Sticky Wilds)!',
     unmount() {
@@ -10280,7 +10323,7 @@ window.GameCore = (function () {
           const wm = Math.random() < 0.32 ? 3 : 2;
           return { id: 'wild', icon: '🏠', wildMult: wm, sticky: isFS };
         }
-        if (allowPaw && !isFS && (col === 0 || col === 2 || col === 4) && Math.random() < 0.068) {
+        if (allowPaw && !isFS && (col === 0 || col === 2 || col === 4) && Math.random() < 0.085) {
           return { id: 'scatter', icon: '🐾' };
         }
         return { ...pickWeighted(DOG_SYMS) };
@@ -10304,7 +10347,7 @@ window.GameCore = (function () {
         <div class="game-stage" style="padding:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px; font-size:12px;">
             <span>🏠 Вайлды ×2 / ×3 на катушках 2·3·4</span>
-            <span id="dh-badge" style="font-weight:900; color:var(--gold-light);">🐾 на 1·3·5 = 9–18 Sticky-Фриспинов!</span>
+            <span id="dh-badge" style="font-weight:900; color:var(--gold-light);">🐾 на 1·3·5 = 9–14 Sticky-Фриспинов!</span>
           </div>
           <div class="slots-machine">
             <div class="slots-grid" id="dh-grid"></div>
@@ -10348,7 +10391,7 @@ window.GameCore = (function () {
         }
         badgeEl.innerHTML = freeSpins > 0
           ? `🧲 ЛИПКИЕ ФРИСПИНЫ: <b>${freeSpins}</b> · Прилипло Будок: <b>${stickyWilds.size}</b>`
-          : `🐾 на 1·3·5 = 9–18 Sticky-Фриспинов!`;
+          : `🐾 на 1·3·5 = 9–14 Sticky-Фриспинов!`;
       }
 
       function spinDog(betVal, buyBonus = false) {
@@ -10582,16 +10625,16 @@ window.GameCore = (function () {
   // 20. BOOK OF PHARAOH: КНИГА ФАРАОНА (Book = Wild + Scatter + Expanding FS!)
   // =========================================================================
   const BOOK_SYMS = [
-    { id: 'book', icon: '📖', name: 'Книга Wild/Scatter', minMatch: 3, m2: 0, m3: 2, m4: 20, m5: 150, weight: 1.85 },
+    { id: 'book', icon: '📖', name: 'Книга Wild/Scatter', minMatch: 3, m2: 0, m3: 2, m4: 20, m5: 150, weight: 2.5 },
     { id: 'explorer', icon: '🤠', name: 'Археолог', minMatch: 2, m2: 1.0, m3: 10, m4: 80, m5: 400, weight: 5 },
     { id: 'pharaoh', icon: '🤴', name: 'Фараон', minMatch: 2, m2: 0.5, m3: 4.0, m4: 35, m5: 160, weight: 7 },
     { id: 'scarab', icon: '🪲', name: 'Скарабей', minMatch: 2, m2: 0.5, m3: 2.5, m4: 10, m5: 60, weight: 10 },
     { id: 'ankh', icon: '☥', name: 'Анкх', minMatch: 2, m2: 0.5, m3: 2.5, m4: 10, m5: 60, weight: 11 },
-    { id: 'ace', icon: '🅰️', name: 'Туз', minMatch: 3, m2: 0, m3: 0.8, m4: 3.5, m5: 14, weight: 16 },
-    { id: 'king', icon: '🅺', name: 'Король', minMatch: 3, m2: 0, m3: 0.8, m4: 3.5, m5: 14, weight: 17 },
-    { id: 'queen', icon: '🆀', name: 'Дама', minMatch: 3, m2: 0, m3: 0.5, m4: 2.2, m5: 9, weight: 19 },
-    { id: 'jack', icon: '🅹', name: 'Валет', minMatch: 3, m2: 0, m3: 0.5, m4: 2.2, m5: 9, weight: 20 },
-    { id: 'ten', icon: '🔟', name: 'Десятка', minMatch: 3, m2: 0, m3: 0.4, m4: 1.8, m5: 8, weight: 21 }
+    { id: 'ace', icon: '🅰️', name: 'Туз', minMatch: 3, m2: 0, m3: 0.8, m4: 3.5, m5: 14, weight: 17 },
+    { id: 'king', icon: '🅺', name: 'Король', minMatch: 3, m2: 0, m3: 0.8, m4: 3.5, m5: 14, weight: 18 },
+    { id: 'queen', icon: '🆀', name: 'Дама', minMatch: 3, m2: 0, m3: 0.5, m4: 2.2, m5: 9, weight: 22 },
+    { id: 'jack', icon: '🅹', name: 'Валет', minMatch: 3, m2: 0, m3: 0.5, m4: 2.2, m5: 9, weight: 23 },
+    { id: 'ten', icon: '🔟', name: 'Десятка', minMatch: 3, m2: 0, m3: 0.4, m4: 1.8, m5: 8, weight: 25 }
   ];
 
   let bookCleanup = null;
@@ -10605,7 +10648,7 @@ window.GameCore = (function () {
     tagColor: '#f59e0b',
     glow: '#f59e0b',
     maxWin: 'x5000',
-    rtp: '94.2%',
+    rtp: '90%',
     desc: 'Легендарные «Книжки»! 📖 заменяет любой символ (Wild) и даёт 10 Фриспинов с Расширяющимся Символом на весь экран!',
     mathInfo: 'Символ 📖 Золотая Книга одновременно является Вайлдом и Скаттером. При выпадении 3+ Книг запускаются 10 Фриспинов, перед которыми случайно выбирается Расширяющийся Символ: он раскрывается на весь барабан и платит сразу по всем 10 линиям даже на несоседних катушках!',
     unmount() {
@@ -10927,6 +10970,443 @@ window.GameCore = (function () {
       renderControls();
     }
   });
+  // =========================================================================
+  // 21. НЕЙРО-ПАТТЕРН 3×3 (память + каскадные уровни, кэшаут в любой момент)
+  // =========================================================================
+  const NEO_GLYPHS = ['🧠', '⚛️', '🔮', '⚡', '🌙', '⭐', '💎', '🚀', '🍀'];
+  const NEO_MULTS = [1.0, 1.25, 1.65, 2.3, 3.4, 5.6, 10.5, 24.0];
+  let neoCleanup = null;
+
+  GameCore.registerGame({
+    id: 'neopattern',
+    title: 'Нейро-Паттерн 3×3',
+    icon: '🧠',
+    category: 'fast',
+    tag: 'ПАМЯТЬ',
+    tagColor: '#22d3ee',
+    glow: '#22d3ee',
+    maxWin: 'x24',
+    rtp: '95%',
+    desc: 'Запомни вспышки глифов на нейро-сетке 3×3 и повтори цепочку! Каждый пройденный раунд растит множитель — забери куш, пока память держит.',
+    mathInfo: 'Раунд k показывает k+4 вспышки подряд. Множитель после раунда k: x1.0, x1.25, x1.65, x2.3, x3.4, x5.6, x10.5, x24. Ошибка в любом глифе = ставка сгорает. Кушаут доступен после любого верного раунда. Множители подобраны от типичной вероятности пройти раунды подряд (≈0.95 / P(пройти k раундов)).',
+    unmount() {
+      if (neoCleanup) {
+        neoCleanup();
+        neoCleanup = null;
+      }
+    },
+    mount(root) {
+      let active = false;
+      let awaitingChoice = false;
+      let betAmount = 0;
+      let round = 0;           // 1..8
+      let cumMult = 1.0;
+      let seq = [];
+      let inputIdx = 0;
+      let showing = false;
+      let timers = [];
+
+      const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+      const gridHTML = NEO_GLYPHS.map((g, i) => `<button class="neo-pad" data-i="${i}" aria-label="глиф ${i + 1}">${g}</button>`).join('');
+
+      neoCleanup = () => {
+        timers.forEach((t) => clearTimeout(t));
+        timers = [];
+        if (active && betAmount > 0 && round >= 1 && inputIdx === seq.length) {
+          AppState.winPayout(Math.round(betAmount * cumMult), cumMult);
+        }
+        active = false;
+      };
+
+      root.innerHTML = `
+        <div class="game-stage" style="padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+            <span>Множитель: <b id="np-mult" class="num" style="color:var(--gold-light)">x1.00</b></span>
+            <span>Раунд: <b id="np-round" class="num">0/8</b></span>
+          </div>
+          <div id="np-msg" style="text-align:center; font-weight:800; font-size:13.5px; min-height:20px; color:var(--gold-light); margin-bottom:8px;">Сделайте ставку — покажем цепочку из 5 вспышек</div>
+          <div id="np-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:272px; margin:0 auto;">${gridHTML}</div>
+          <div id="np-ladder" style="display:flex; gap:4px; justify-content:center; margin-top:12px; flex-wrap:wrap;"></div>
+        </div>
+        <div class="bet-panel" id="np-bet"></div>
+      `;
+
+      if (!document.getElementById('np-style')) {
+        const st = document.createElement('style');
+        st.id = 'np-style';
+        st.textContent = `
+          .neo-pad{height:74px; font-size:32px; border-radius:16px; border:1px solid rgba(255,255,255,0.09); background:rgba(255,255,255,0.04); cursor:pointer; transition:background .18s ease, transform .18s ease, box-shadow .18s ease; display:flex; align-items:center; justify-content:center;}
+          .neo-pad:hover{background:rgba(255,255,255,0.09);}
+          .neo-pad.on{background:rgba(34,211,238,0.30); border-color:#22d3ee; transform:scale(1.08); box-shadow:0 0 22px rgba(34,211,238,0.45);}
+          .neo-pad.lock{pointer-events:none; opacity:0.85;}
+          .neo-pill{font-size:10px; font-weight:800; padding:3px 7px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); color:var(--text-muted);}
+          .neo-pill.cur{border-color:#22d3ee; color:#22d3ee; box-shadow:0 0 12px rgba(34,211,238,0.4);}
+          .neo-pill.done{border-color:#00e676; color:#00e676;}
+        `;
+        document.head.appendChild(st);
+      }
+
+      const gridEl = root.querySelector('#np-grid');
+      const msgEl = root.querySelector('#np-msg');
+      const betPanel = root.querySelector('#np-bet');
+      const multEl = root.querySelector('#np-mult');
+      const roundEl = root.querySelector('#np-round');
+      const ladderEl = root.querySelector('#np-ladder');
+
+      function renderHud() {
+        multEl.textContent = 'x' + cumMult.toFixed(2);
+        roundEl.textContent = Math.min(8, Math.max(0, round)) + '/8';
+        ladderEl.innerHTML = NEO_MULTS.map((m, i) => {
+          const cls = i + 1 < round ? 'neo-pill done' : i + 1 === round ? 'neo-pill cur' : 'neo-pill';
+          return `<span class="${cls}">x${m}</span>`;
+        }).join('');
+      }
+
+      function setPadsLocked(locked) {
+        gridEl.querySelectorAll('.neo-pad').forEach((p) => p.classList.toggle('lock', locked));
+      }
+
+      function flashPad(i, ms) {
+        const pad = gridEl.querySelector('.neo-pad[data-i="' + i + '"]');
+        if (!pad) return;
+        pad.classList.add('on');
+        later(() => pad.classList.remove('on'), ms || 300);
+      }
+
+      function startShow() {
+        showing = true;
+        inputIdx = 0;
+        awaitingChoice = false;
+        setPadsLocked(true);
+        msgEl.textContent = 'Запоминай вспышки…';
+        renderHud();
+        const step = 540;
+        seq.forEach((g, i) => {
+          later(() => { flashPad(g, 320); SFX.tick(i + 1); }, 480 + i * step);
+        });
+        later(() => {
+          showing = false;
+          setPadsLocked(false);
+          msgEl.textContent = 'Твой ход! Повтори цепочку.';
+        }, 480 + seq.length * step + 120);
+      }
+
+      function startRound(r) {
+        round = r;
+        seq = Array.from({ length: 4 + r }, () => Math.floor(Math.random() * NEO_GLYPHS.length));
+        startShow();
+      }
+
+      function finishGame(winCoins, mult, headline) {
+        active = false;
+        awaitingChoice = false;
+        setPadsLocked(true);
+        if (winCoins > 0) {
+          AppState.winPayout(winCoins, mult);
+          SFX.jackpot();
+          msgEl.innerHTML = `${headline} +${GameCore.fmt(winCoins)} 🪙 (x${mult.toFixed(2)})`;
+        } else {
+          SFX.wrong();
+          msgEl.textContent = 'Ставка сгорела. Ещё раз?';
+        }
+        renderHud();
+        renderBet();
+      }
+
+      function onPad(i) {
+        if (!active || showing || awaitingChoice) return;
+        flashPad(i, 220);
+        SFX.tap();
+        if (i === seq[inputIdx]) {
+          inputIdx++;
+          if (inputIdx === seq.length) {
+            cumMult = NEO_MULTS[round - 1];
+            SFX.gem(round);
+            if (round >= NEO_MULTS.length) {
+              finishGame(Math.round(betAmount * NEO_MULTS[NEO_MULTS.length - 1]), NEO_MULTS[NEO_MULTS.length - 1], '🏆 ИДЕАЛЬНАЯ ПАМЯТЬ!');
+              return;
+            }
+            awaitingChoice = true;
+            setPadsLocked(true);
+            msgEl.innerHTML = `✅ Раунд ${round}/${NEO_MULTS.length} пройден! Забрать x${cumMult.toFixed(2)} или рискнуть?`;
+            renderChoice();
+            renderHud();
+          }
+        } else {
+          const chain = seq.map((g) => NEO_GLYPHS[g]).join(' ');
+          msgEl.innerHTML = `❌ Ошибка! Цепочка была: ${chain}`;
+          finishGame(0, 0, '');
+          msgEl.innerHTML = `❌ Ошибка! Цепочка была: ${chain}`;
+        }
+      }
+
+      function renderChoice() {
+        betPanel.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn btn-emerald btn-lg num" id="np-cash">💰 Забрать x${cumMult.toFixed(2)}</button>
+            <button class="btn btn-purple btn-lg" id="np-next">🧠 Дальше → Раунд ${round + 1}</button>
+          </div>
+        `;
+        betPanel.querySelector('#np-cash').onclick = () => {
+          const coins = Math.round(betAmount * cumMult);
+          finishGame(coins, cumMult, '💰 Забрано:');
+        };
+        betPanel.querySelector('#np-next').onclick = () => {
+          SFX.tap();
+          startRound(round + 1);
+        };
+      }
+
+      gridEl.querySelectorAll('.neo-pad').forEach((pad) => {
+        pad.addEventListener('click', () => onPad(Number(pad.dataset.i)));
+      });
+
+      function renderBet() {
+        GameCore.renderBetControls(betPanel, {
+          minBet: 5,
+          actionLabel: '🧠 Начать нейро-паттерн',
+          disabled: active || awaitingChoice,
+          onAction(bet) {
+            if (!AppState.placeBet(bet, 'neopattern')) return;
+            SFX.card();
+            active = true;
+            awaitingChoice = false;
+            betAmount = bet;
+            cumMult = 1.0;
+            round = 0;
+            renderHud();
+            startRound(1);
+            renderBet();
+          }
+        });
+      }
+
+      renderHud();
+      renderBet();
+    }
+  });
+
+  // =========================================================================
+  // 22. КВАНТОВАЯ МИШЕНЬ (хронометр: останови маркер на золотой зоне)
+  // =========================================================================
+  const QT_LEVELS = [
+    { f: 0.50, mult: 1.9, speed: 1.7 },
+    { f: 0.35, mult: 2.7, speed: 2.1 },
+    { f: 0.24, mult: 4.0, speed: 2.6 },
+    { f: 0.17, mult: 5.6, speed: 3.1 },
+    { f: 0.12, mult: 7.9, speed: 3.8 },
+    { f: 0.085, mult: 11.2, speed: 4.6 },
+    { f: 0.060, mult: 15.8, speed: 5.5 },
+    { f: 0.040, mult: 23.8, speed: 6.5 }
+  ];
+  let qtCleanup = null;
+
+  GameCore.registerGame({
+    id: 'qtarget',
+    title: 'Квантовая Мишень',
+    icon: '🎯',
+    category: 'fast',
+    tag: 'ХРОНОМЕТР',
+    tagColor: '#ffb800',
+    glow: '#ffb800',
+    maxWin: 'x23.8',
+    rtp: '95%',
+    desc: 'Маркер бегает по квантовой шкале — останови его точно на золотой зоне! Зона уже, скорость выше: забери x23.8 на 8-м уровне.',
+    mathInfo: 'Маркер движется по шкале равномерно и отскакивает от краёв. Золотая зона на уровне N: 50%, 35%, 24%, 17%, 12%, 8.5%, 6%, 4% шкалы. Выигрыш за попадание: x1.9, x2.7, x4.0, x5.6, x7.9, x11.2, x15.8, x23.8 (= 0.95 / долю зоны). Промах = ставка сгорает. Кушаут доступен после каждого попадания. Матожидание каждого уровня — ровно 0.95 ставки: казино в плюсе всегда.',
+    unmount() {
+      if (qtCleanup) {
+        qtCleanup();
+        qtCleanup = null;
+      }
+    },
+    mount(root) {
+      let active = false;
+      let awaitingChoice = false;
+      let level = 0;             // 0 = не началась; 1..8 после попаданий
+      let betAmount = 0;
+      let pos = 0;
+      let dir = 1;
+      let zoneLeft = 25;
+      let raf = null;
+      let lastTs = 0;
+      let timers = [];
+
+      const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+      const cur = () => QT_LEVELS[Math.max(0, Math.min(QT_LEVELS.length - 1, level))];
+
+      qtCleanup = () => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        timers.forEach((t) => clearTimeout(t));
+        timers = [];
+        if (active && betAmount > 0 && level >= 1) {
+          AppState.winPayout(Math.round(betAmount * QT_LEVELS[level - 1].mult), QT_LEVELS[level - 1].mult);
+        }
+        active = false;
+      };
+
+      root.innerHTML = `
+        <div class="game-stage" style="padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+            <span>Уровень: <b id="qt-level" class="num">—/8</b></span>
+            <span>Куш: <b id="qt-pot" class="num" style="color:var(--gold-light)">x1.00</b></span>
+          </div>
+          <div id="qt-msg" style="text-align:center; font-weight:800; font-size:13.5px; min-height:20px; color:var(--gold-light); margin-bottom:12px;">Сделайте ставку и остановите маркер на золотой зоне</div>
+          <div id="qt-track" style="position:relative; height:44px; border-radius:12px; overflow:hidden; background:linear-gradient(90deg,#111a33,#1b2547); border:1px solid var(--border-subtle);">
+            <div id="qt-zone" style="position:absolute; top:0; bottom:0; background:linear-gradient(180deg,#ffd54a,#ffb800); box-shadow:0 0 18px rgba(255,184,0,0.55) inset;"></div>
+            <div id="qt-marker" style="position:absolute; top:-2px; bottom:-2px; width:7px; background:#fff; border-radius:4px; box-shadow:0 0 12px rgba(255,255,255,0.8);"></div>
+          </div>
+          <button id="qt-stop" class="btn btn-gold btn-lg btn-block num" style="margin-top:14px; font-size:18px;" disabled>⏹ СТОП!</button>
+          <div id="qt-ladder" style="display:flex; gap:4px; justify-content:center; margin-top:12px; flex-wrap:wrap;"></div>
+        </div>
+        <div class="bet-panel" id="qt-bet"></div>
+      `;
+
+      const trackEl = root.querySelector('#qt-track');
+      const zoneEl = root.querySelector('#qt-zone');
+      const markerEl = root.querySelector('#qt-marker');
+      const msgEl = root.querySelector('#qt-msg');
+      const levelEl = root.querySelector('#qt-level');
+      const potEl = root.querySelector('#qt-pot');
+      const stopBtn = root.querySelector('#qt-stop');
+      const betPanel = root.querySelector('#qt-bet');
+      const ladderEl = root.querySelector('#qt-ladder');
+
+      function renderHud() {
+        levelEl.textContent = (level > 0 ? level : '—') + '/8';
+        potEl.textContent = 'x' + (level >= 1 ? QT_LEVELS[level - 1].mult.toFixed(1) : '1.0');
+        ladderEl.innerHTML = QT_LEVELS.map((l, i) => {
+          const cls = i + 1 < level ? 'qt-pill done' : i + 1 === level + 1 ? 'qt-pill cur' : 'qt-pill';
+          return `<span class="${cls}">x${l.mult}</span>`;
+        }).join('');
+        if (!document.getElementById('qt-style')) {
+          const st = document.createElement('style');
+          st.id = 'qt-style';
+          st.textContent = `.qt-pill{font-size:10px; font-weight:800; padding:3px 7px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); color:var(--text-muted);} .qt-pill.cur{border-color:#ffb800; color:#ffb800; box-shadow:0 0 12px rgba(255,184,0,0.4);} .qt-pill.done{border-color:#00e676; color:#00e676;}`;
+          document.head.appendChild(st);
+        }
+      }
+
+      function placeZone() {
+        const lv = cur();
+        const f = lv.f * 100;
+        const maxLeft = 100 - f;
+        zoneLeft = maxLeft > 0 ? 5 + Math.random() * (maxLeft - 5) : 0;
+        zoneEl.style.left = zoneLeft + '%';
+        zoneEl.style.width = f + '%';
+      }
+
+      function tick(ts) {
+        if (!active) { raf = null; return; }
+        if (!lastTs) lastTs = ts;
+        const dt = Math.min(0.05, (ts - lastTs) / 1000);
+        lastTs = ts;
+        const lv = cur();
+        pos += dir * lv.speed * 100 * dt;   // speed: долей шкалы в секунду
+        if (pos >= 100) { pos = 100; dir = -1; }
+        else if (pos <= 0) { pos = 0; dir = 1; }
+        markerEl.style.left = `calc(${pos}% - 3px)`;
+        raf = requestAnimationFrame(tick);
+      }
+
+      function startLevel(n) {
+        level = n;
+        pos = 0;
+        dir = 1;
+        lastTs = 0;
+        placeZone();
+        renderHud();
+        if (!raf) raf = requestAnimationFrame(tick);
+        stopBtn.disabled = false;
+        stopBtn.textContent = '⏹ СТОП! (уровень ' + (n + 1) + ')';
+        msgEl.textContent = 'Лови момент…';
+      }
+
+      function finishGame(winCoins, mult, headline) {
+        active = false;
+        awaitingChoice = false;
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        stopBtn.disabled = true;
+        stopBtn.textContent = '⏹ СТОП!';
+        if (winCoins > 0) {
+          AppState.winPayout(winCoins, mult);
+          SFX.jackpot();
+          msgEl.innerHTML = `${headline} +${GameCore.fmt(winCoins)} 🪙 (x${mult.toFixed(1)})`;
+        } else {
+          SFX.wrong();
+          msgEl.textContent = 'Мимо зоны. Ставка сгорела!';
+        }
+        renderHud();
+        renderBet();
+      }
+
+      function onStop() {
+        if (!active || awaitingChoice) return;
+        const lv = cur();
+        const f = lv.f * 100;
+        const center = zoneLeft + f / 2;
+        if (Math.abs(pos - center) <= f / 2) {
+          level = Math.min(QT_LEVELS.length, level + 1);
+          SFX.gem(level);
+          awaitingChoice = true;
+          stopBtn.disabled = true;
+          const mult = QT_LEVELS[level - 1].mult;
+          msgEl.innerHTML = `🎯 Попадание! Забрать x${mult.toFixed(1)} или дальше на уровень ${level >= QT_LEVELS.length ? 'MAX' : level + 1}?`;
+          renderChoice(mult);
+          renderHud();
+        } else {
+          finishGame(0, 0, '');
+        }
+      }
+
+      function renderChoice(mult) {
+        betPanel.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn btn-emerald btn-lg num" id="qt-cash">💰 Забрать x${mult.toFixed(1)}</button>
+            ${level < QT_LEVELS.length
+              ? `<button class="btn btn-purple btn-lg" id="qt-next">⚡ Дальше → Ур. ${level + 1}</button>`
+              : `<button class="btn btn-gold btn-lg" id="qt-next">🏆 Забрать ВСЁ</button>`}
+          </div>
+        `;
+        betPanel.querySelector('#qt-cash').onclick = () => {
+          finishGame(Math.round(betAmount * mult), mult, '💰 Забрано:');
+        };
+        betPanel.querySelector('#qt-next').onclick = () => {
+          if (level >= QT_LEVELS.length) { finishGame(Math.round(betAmount * mult), mult, '🏆 МАКСИМУМ!'); return; }
+          SFX.tap();
+          awaitingChoice = false;
+          startLevel(level);
+          betPanel.innerHTML = '';
+          renderBet();
+        };
+      }
+
+      stopBtn.onclick = onStop;
+
+      function renderBet() {
+        GameCore.renderBetControls(betPanel, {
+          minBet: 5,
+          actionLabel: '🎯 Начать (маркер запущен)',
+          disabled: active || awaitingChoice,
+          onAction(bet) {
+            if (!AppState.placeBet(bet, 'qtarget')) return;
+            SFX.card();
+            betAmount = bet;
+            active = true;
+            awaitingChoice = false;
+            level = 0;
+            startLevel(0);
+            renderBet();
+          }
+        });
+      }
+
+      placeZone();
+      renderHud();
+      renderBet();
+    }
+  });
 })();
 
 
@@ -11144,7 +11624,7 @@ window.SocialArena = (function () {
     const meWithTitle = players.find((p) => p.id === ident.id) || meRaw;
     const isFileUrl = window.location.protocol === 'file:';
     const pageUrl = isFileUrl ? '' : window.location.href.split('#')[0];
-    const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино (20 игр, Падающая Кирка и живые задачи без донатов)!');
+    const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино (22 игры, Падающая Кирка и живые задачи без донатов)!');
 
     boardData = {
       me: meWithTitle,
@@ -11286,6 +11766,17 @@ window.SocialArena = (function () {
     const opsSource = (payload && Array.isArray(payload.ops) && payload.ops.length)
       ? payload.ops
       : fbLegacyOps(payload);
+    // СНАЧАЛА ПРО КВОТУ: раньше КАЖДЫЙ heartbeat (раз в 8с, даже из фоновой вкладки)
+    // делал транзакцию 1 read + 1 write и два неограниченных query. Теперь пустой
+    // синк (нет операций, нет игрового события, таб «Тусовка» закрыт) отвечает из кэша
+    // и НЕ ТРОГАЕТ Firestore ВООБЩЕ — когда открываешь таб, lists освежаются не чаще раза в 15с.
+    const friendsOpen = !!activeContainer && (typeof document === 'undefined' || document.visibilityState === 'visible');
+    const SYNC_CACHE_MS = 15000;
+    const wantHeavy = friendsOpen && ((fbState.lastHeavyFetch || 0) < Date.now() - SYNC_CACHE_MS);
+    const hasGameEvent = !!(payload && payload.gameEvent);
+    if (opsSource.length === 0 && !hasGameEvent && !wantHeavy && fbState.cachedSync) {
+      return fbState.cachedSync; // дешёвый путь: 0 операций Firestore
+    }
     const uid = brFbId();
     const name = brFbName();
     const startParam = (payload && payload.startParam) || '';
@@ -11345,10 +11836,18 @@ window.SocialArena = (function () {
       }
     }
 
-    const [playersRaw, feed] = await Promise.all([
-      brFbPlayersList(meProfile.roomCode),
-      brFbFeedList(meProfile.roomCode, 15)
-    ]);
+    let playersRaw, feed;
+    if (wantHeavy || !fbState.cachedSync) {
+      fbState.lastHeavyFetch = Date.now();
+      [playersRaw, feed] = await Promise.all([
+        brFbPlayersList(meProfile.roomCode),
+        brFbFeedList(meProfile.roomCode, 15)
+      ]);
+    } else {
+      // берём списки из кэша: money-транзакция уже прошла, а тянуть всю коллекцию ради неё нечем оплатить
+      playersRaw = fbState.cachedSync.players;
+      feed = fbState.cachedSync.feed;
+    }
     const pageUrl = window.location.protocol === 'file:' ? '' : window.location.href.split('?')[0].split('#')[0];
     const room = meProfile.roomCode;
     const inviteUrl = pageUrl + (room && room !== 'MAIN' ? ('?chat=' + encodeURIComponent(room)) : '');
@@ -11357,7 +11856,7 @@ window.SocialArena = (function () {
     const { _jpDelta, ...mePublic } = meProfile;
     const pub = { ...mePublic, title: computeRoastTitle(mePublic, 0) };
 
-    return {
+    const syncResult = {
       ok: true,
       user: pub,
       roomCode: room,
@@ -11371,6 +11870,8 @@ window.SocialArena = (function () {
       demoMode: false,
       externalNotice: null
     };
+    fbState.cachedSync = syncResult;
+    return syncResult;
   }
 
   async function brFbTransfer(fromId, toId, amount, feedText) {
@@ -11724,72 +12225,8 @@ window.SocialArena = (function () {
 
   // Входящие вызовы и просьбы в табе «Тусовка»
   window.BR_FB_RENDER_INBOX = async function (box) {
-    try {
-      if (!window.BR_FB.enabled) { box.innerHTML = ''; return; }
-      const data = await window.BR_FB.listInbox();
-      let html = '';
-      for (const d of data.incoming) {
-        if (d.expired) {
-          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
-            + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:var(--text-secondary);">⌛ Вызов от ' + escapeHtml(d.fromName) + ' истёк</div>'
-            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 · дуэль больше неактивна</div></div>'
-            + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить (вернуть ставку)</button>'
-            + '</div>';
-          continue;
-        }
-        html += '<div class="fb-duel-card" style="border:1px solid rgba(167,139,250,.45);background:rgba(139,92,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#c4b5fd;">⚔️ ' + escapeHtml(d.fromName) + ' вызывает на дуэль!</div>'
-          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка: <b class="num">' + GameCore.fmt(d.stake) + ' 🪙</b> — победитель забирает банк ×2</div></div>'
-          + '<button class="btn btn-emerald" data-accept="' + d.docId + '" style="padding:7px 14px;">Принять</button>'
-          + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить</button>'
-          + '</div>';
-      }
-      for (const d of (data.active || [])) {
-        const myId = brFbId();
-        const opponent = d.fromId === myId ? d.toName : d.fromName;
-        if (d.expired) {
-          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.85;">'
-            + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:var(--text-secondary);">⏰ Дуэль с ' + escapeHtml(opponent || 'соперником') + ' зависла</div>'
-            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 — можно вернуть свои деньги (обоим вернётся ставка)</div></div>'
-            + '<button class="btn btn-ghost" data-abandon="' + d.docId + '" style="padding:7px 12px;">Вернуть ставку</button>'
-            + '</div>';
-          continue;
-        }
-        html += '<div class="fb-duel-card" style="border:1px solid rgba(0,230,118,.5);background:rgba(0,230,118,.12);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#7cf5c0;">⚔️ Твоя очередь: дуэль с ' + escapeHtml(opponent || 'соперником') + '</div>'
-          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 в банке · ответишь — банк уйдёт победителю</div></div>'
-          + '<button class="btn btn-emerald" data-answer="' + d.docId + '" style="padding:7px 14px;">Ответить →</button>'
-          + '</div>';
-      }
-      for (const d of data.outgoing) {
-        if (d.expired) {
-          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
-            + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⌛ Вызов для ' + escapeHtml(d.toName) + ' истёк</div>'
-            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 заморожена — забери её обратно</div></div>'
-            + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
-            + '</div>';
-          continue;
-        }
-        html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-          + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⏳ Ждём ответа: ' + escapeHtml(d.toName) + '</div>'
-          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка заморожена: ' + GameCore.fmt(d.stake) + ' 🪙</div></div>'
-          + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
-          + '</div>';
-      }
-      let hiddenExpiredBegs = 0;
-      for (const b of data.openBegs) {
-        if (b.expired) { hiddenExpiredBegs++; continue; }
-        html += '<div class="fb-beg-card" style="border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#fcd34d;">🥺 ' + escapeHtml(b.fromName) + ' просит на дошик</div>'
-          + '<div style="font-size:12px;color:var(--text-secondary);">Поделишься ' + GameCore.fmt(b.amount || 120) + ' 🪙?</div></div>'
-          + '<button class="btn btn-gold" data-give="' + b.docId + '" style="padding:7px 14px;">💛 Дать</button>'
-          + '</div>';
-      }
-      if (hiddenExpiredBegs > 0) {
-        html += '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:2px 0 4px;">⌛ Скрыто просроченных просьб: ' + hiddenExpiredBegs + '</div>';
-      }
-      box.innerHTML = html;
-
+    const bindInboxActions = (box) => {
+      box.addEventListener('click', () => { fbState.inboxCache = null; }, { once: true, capture: true });
       box.querySelectorAll('[data-accept]').forEach((btn) => {
         btn.onclick = async () => {
           btn.disabled = true;
@@ -11861,6 +12298,76 @@ window.SocialArena = (function () {
           await syncNow();
         };
       });
+    };
+    try {
+      if (fbState.inboxCache && Date.now() - fbState.inboxCache.ts < 20000) { box.innerHTML = fbState.inboxCache.html; bindInboxActions(box); return; }
+      if (!window.BR_FB.enabled) { box.innerHTML = ''; return; }
+      const data = await window.BR_FB.listInbox();
+      let html = '';
+      for (const d of data.incoming) {
+        if (d.expired) {
+          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
+            + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:var(--text-secondary);">⌛ Вызов от ' + escapeHtml(d.fromName) + ' истёк</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 · дуэль больше неактивна</div></div>'
+            + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить (вернуть ставку)</button>'
+            + '</div>';
+          continue;
+        }
+        html += '<div class="fb-duel-card" style="border:1px solid rgba(167,139,250,.45);background:rgba(139,92,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#c4b5fd;">⚔️ ' + escapeHtml(d.fromName) + ' вызывает на дуэль!</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка: <b class="num">' + GameCore.fmt(d.stake) + ' 🪙</b> — победитель забирает банк ×2</div></div>'
+          + '<button class="btn btn-emerald" data-accept="' + d.docId + '" style="padding:7px 14px;">Принять</button>'
+          + '<button class="btn btn-ghost" data-decline="' + d.docId + '" style="padding:7px 12px;">Отклонить</button>'
+          + '</div>';
+      }
+      for (const d of (data.active || [])) {
+        const myId = brFbId();
+        const opponent = d.fromId === myId ? d.toName : d.fromName;
+        if (d.expired) {
+          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.85;">'
+            + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:var(--text-secondary);">⏰ Дуэль с ' + escapeHtml(opponent || 'соперником') + ' зависла</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 — можно вернуть свои деньги (обоим вернётся ставка)</div></div>'
+            + '<button class="btn btn-ghost" data-abandon="' + d.docId + '" style="padding:7px 12px;">Вернуть ставку</button>'
+            + '</div>';
+          continue;
+        }
+        html += '<div class="fb-duel-card" style="border:1px solid rgba(0,230,118,.5);background:rgba(0,230,118,.12);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#7cf5c0;">⚔️ Твоя очередь: дуэль с ' + escapeHtml(opponent || 'соперником') + '</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 в банке · ответишь — банк уйдёт победителю</div></div>'
+          + '<button class="btn btn-emerald" data-answer="' + d.docId + '" style="padding:7px 14px;">Ответить →</button>'
+          + '</div>';
+      }
+      for (const d of data.outgoing) {
+        if (d.expired) {
+          html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;opacity:.75;">'
+            + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⌛ Вызов для ' + escapeHtml(d.toName) + ' истёк</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);">Ставка ' + GameCore.fmt(d.stake) + ' 🪙 заморожена — забери её обратно</div></div>'
+            + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
+            + '</div>';
+          continue;
+        }
+        html += '<div class="fb-duel-card" style="border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:700;color:var(--text-secondary);">⏳ Ждём ответа: ' + escapeHtml(d.toName) + '</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Ставка заморожена: ' + GameCore.fmt(d.stake) + ' 🪙</div></div>'
+          + '<button class="btn btn-ghost" data-cancel="' + d.docId + '" style="padding:7px 12px;">Отменить (возврат)</button>'
+          + '</div>';
+      }
+      let hiddenExpiredBegs = 0;
+      for (const b of data.openBegs) {
+        if (b.expired) { hiddenExpiredBegs++; continue; }
+        html += '<div class="fb-beg-card" style="border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:180px;"><div style="font-weight:800;color:#fcd34d;">🥺 ' + escapeHtml(b.fromName) + ' просит на дошик</div>'
+          + '<div style="font-size:12px;color:var(--text-secondary);">Поделишься ' + GameCore.fmt(b.amount || 120) + ' 🪙?</div></div>'
+          + '<button class="btn btn-gold" data-give="' + b.docId + '" style="padding:7px 14px;">💛 Дать</button>'
+          + '</div>';
+      }
+      if (hiddenExpiredBegs > 0) {
+        html += '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:2px 0 4px;">⌛ Скрыто просроченных просьб: ' + hiddenExpiredBegs + '</div>';
+      }
+      box.innerHTML = html;
+
+      fbState.inboxCache = { ts: Date.now(), html: html };
+      bindInboxActions(box);
     } catch (e) {
       console.warn('[fb] inbox render failed', e);
       box.innerHTML = '';
@@ -12353,6 +12860,9 @@ window.SocialArena = (function () {
 
   function renderFriendsTab(main, skipInitialFetch = false) {
     activeContainer = main;
+    // Сброс кэша списков — только при реальном открытии таба, НЕ при фоновом refreshIfVisible после синка,
+    // иначе троттлинг тяжёлых запросов ломается и каждый синк тянет всю коллекцию заново.
+    if (!skipInitialFetch) fbState.lastHeavyFetch = 0;
     if (!skipInitialFetch) syncNow();
 
     const me = boardData.me;
@@ -12437,6 +12947,7 @@ window.SocialArena = (function () {
       </div>
     `;
 
+    if (!skipInitialFetch) fbState.inboxCache = null; // открытие таба — форсируем свежий инбокс
     if (window.BR_FB_ATTACH_INBOX) window.BR_FB_ATTACH_INBOX(main);
 
     const invBtn = main.querySelector('#soc-invite');
@@ -12573,9 +13084,13 @@ window.SocialArena = (function () {
   function boot() {
     initTelegramSDK();
     setTimeout(() => syncNow(), 250);
+    // 30с вместо 8с и полный ноль запросов из скрытых вкладок: каждый syncNow без дела
+    // всё равно делает транзакцию (1 read + 1 write) — иначе 1-2 открытых клиента за сутки съедали весь лимит Spark
     pollTimer = setInterval(() => {
-      if (!staticMode) syncNow();
-    }, 8000);
+      if (staticMode) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
+      syncNow();
+    }, 30000);
   }
 
   document.addEventListener('DOMContentLoaded', boot);
@@ -13135,7 +13650,7 @@ window.App = (function () {
     'rocket', 'roulette', 'slots', 'plinko', 'dice', 'baccarat', 'wheel', 'keno'
   ]);
   const NEW_HIT_IDS = new Set([
-    'mineslot', 'olympus', 'doghouse', 'bonanza', 'bookofra'
+    'mineslot', 'olympus', 'doghouse', 'bonanza', 'bookofra', 'neopattern', 'qtarget'
   ]);
 
   // Brain Trainer state
@@ -13703,7 +14218,7 @@ window.App = (function () {
         <h1 class="hero-title">Умное Казино BrainRoyale</h1>
         <p class="hero-sub">
           ${st.coins === 0
-            ? 'Твой стартовый банк — 0 🪙, потому что здесь фишки нельзя купить! Решай задачи на жёстком таймере и испытай удачу в 20 хардкорных играх казино!'
+            ? 'Твой стартовый банк — 0 🪙, потому что здесь фишки нельзя купить! Решай задачи на жёстком таймере и испытай удачу в 22 хардкорных играх казино!'
             : `В твоём банке ${GameCore.fmt(st.coins)} 🪙 (решено задач: ${st.stats.tasksSolved}). Держи комбо без тайм-аутов (до x2.20), копи на Вознесение 💠 и играй с умом!`}
         </p>
         <div class="hero-actions">
