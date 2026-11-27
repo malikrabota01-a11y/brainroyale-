@@ -1114,6 +1114,15 @@ html, body {
   border-color: #ff8c00 !important;
   box-shadow: 0 0 36px rgba(255, 140, 0, 0.8), inset 0 0 36px rgba(255, 80, 0, 0.65) !important;
 }
+.dgn-door.dgn-princess {
+  animation: dgn-princess-glow 0.9s ease-in-out 4 both !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 44px rgba(255, 215, 0, 0.78), inset 0 0 32px rgba(255, 192, 203, 0.55) !important;
+}
+@keyframes dgn-princess-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.55) saturate(1.35); }
+}
 @keyframes dgn-burn {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.7) sepia(0.65) hue-rotate(-18deg) saturate(2.2); }
@@ -7358,6 +7367,9 @@ window.GameCore = (function () {
   const DGN_G_MONSTER = 1.3;       // победа над монстром — небольшой бонус к банку
   const DGN_MONSTER_WIN = 0.65;
   const DGN_CHEST_HEAL = 0.40;     // шанс +1 ♥ за сокровищницу
+  const DGN_PRINCESS_FLOOR = 5;    // принцесса возможна только после 5 пройденных дверей (этажи 6+)
+  const DGN_PRINCESS_CHANCE = 0.20; // 20% среди «сокровищ» на этажах 6-9
+  const DGN_G_PRINCESS = 3.0;      // банк ×3.0 (+ гарантированные +1 ♥ до максимума)
   const DGN_MAX_HP = 3;
   const DGN_START_HP = 2;
   let dgnCleanup = null;
@@ -7370,10 +7382,10 @@ window.GameCore = (function () {
     tag: '9 ЭТАЖЕЙ',
     tagColor: '#ffb800',
     glow: '#ffb800',
-    maxWin: 'x460',
-    rtp: '~77%',
-    desc: 'За каждой дверью — сокровищница, монстр или ловушка. Ловушка убивает мгновенно. Монстр всегда отнимает сердце. У-у-ух, какие двери скрипят!',
-    mathInfo: 'На каждом из 9 этажей три двери скрывают 💰 сокровищницу (×2.0 к банку, 40% шанс +1 ♥, макс 3), 👹 монстра (65% победить: банк +30% и −1 ♥ от ран; 35% поцарапан: банк без бонуса и −1 ♥), 🕳️ ловушку (МГНОВЕННАЯ смерть — банк сгорает независимо от сердец). Банк множится событиями; выплата = ставка × банк × 0.9. Измеренная отдача по этажам (Монте-Карло, 250k походов): 96% / 88% / 83% / 79% / 75% / 71% / 69% / 66% / 62% (средняя ≈ 77%). Кэшаут доступен после каждого этажа.',
+    maxWin: 'x2332',
+    rtp: '~81%',
+    desc: 'С 6-го этажа вместо сокровищницы можно встретить 👸 Принцессу — шанс 20%, банк ×3.0 и +1 ♥ гарантированно.',
+    mathInfo: 'На каждом из 9 этажей три двери скрывают 💰 сокровищницу (×2.0 к банку, 40% шанс +1 ♥, макс 3), 👹 монстра (65% победить: банк +30% и −1 ♥ от ран; 35% поцарапан: банк без бонуса и −1 ♥), 🕳️ ловушку (МГНОВЕННАЯ смерть — банк сгорает независимо от сердец). Фича: на этажах 6–9 (после 5 пройденных дверей) сокровищница в 20% случаев оказывается 👸 Принцессой: банк ×3.0 (вместо ×2.0) + гарантированно +1 ♥ (до макс 3). Банк множится событиями; выплата = ставка × банк × 0.9. Потолок (все сокровищницы-принцессы с 6 этажа): 2⁵×3.0⁴×0.9 ≈ x2333. Измеренная отдача по этажам (Монте-Карло, 250k походов): 96% / 88% / 82% / 77% / 73% / 75% / 75% / 77% / 87% (средняя ≈ 81%). Кэшаут доступен после каждого этажа.',
     unmount() {
       if (dgnCleanup) {
         dgnCleanup();
@@ -7427,9 +7439,8 @@ window.GameCore = (function () {
       const betPanel = root.querySelector('#dgn-bet');
 
       function heartStr() {
-        let s = '';
-        for (let i = 0; i < DGN_MAX_HP; i++) s += i < hp ? '❤️' : '🖤';
-        return s;
+        // Только живые сердца: пустые ячейки сбивали с толку (видел «1 сердце» вместо 2).
+        return hp > 0 ? '❤️'.repeat(hp) : '💀';
       }
 
       function cashWin() { return Math.round(betAmount * mult * DGN_RAKE); }
@@ -7458,15 +7469,18 @@ window.GameCore = (function () {
         renderDepth();
       }
 
+      let princessRevealed = false;
+
       function renderDoors(reveal) {
         renderShell();
         doorsEl.innerHTML = '';
         doors.forEach((d, i) => {
           const btn = document.createElement('button');
           if (reveal) {
-            btn.className = 'dgn-door open' + (d === 'trap' || (d === 'monster') ? ' bad' : '');
-            btn.style.backgroundImage = "url('" + doorImg(d) + "')";
-            btn.innerHTML = '<span class="dgn-tag">' + (d === 'chest' ? '💰 Клад ×2.0' : d === 'monster' ? '👹 Монстр' : '🕳️ Ловушка') + '</span>';
+            const isPrin = princessRevealed && i === picked && d === 'chest';
+            btn.className = 'dgn-door open' + (d === 'trap' || (d === 'monster') ? ' bad' : '') + (isPrin ? ' dgn-princess' : '');
+            btn.style.backgroundImage = "url('" + (isPrin ? 'assets/games/dungeon/princess.jpg' : doorImg(d)) + "')";
+            btn.innerHTML = '<span class="dgn-tag">' + (isPrin ? '👸 Принцесса ×3.0' : d === 'chest' ? '💰 Клад ×2.0' : d === 'monster' ? '👹 Монстр' : '🕳️ Ловушка') + '</span>';
           } else {
             btn.className = 'dgn-door';
             btn.innerHTML = '<span class="dgn-tag">Дверь ' + (i + 1) + '</span>';
@@ -7549,6 +7563,7 @@ window.GameCore = (function () {
       function pickDoor(i) {
         if (!active || picked >= 0) return;
         picked = i;
+        princessRevealed = false;
         SFX.tap();
         msgEl.textContent = '🚪 Дверь поддаётся со скрипом…';
         const kids = doorsEl.children;
@@ -7563,8 +7578,25 @@ window.GameCore = (function () {
         const d = doors[picked];
         renderDoors(true);
         if (d === 'chest') {
-          mult *= DGN_G_CHEST;
           floor += 1;
+          const princess = floor > DGN_PRINCESS_FLOOR && Math.random() < DGN_PRINCESS_CHANCE;
+          if (princess) {
+            princessRevealed = true;
+            renderDoors(true);
+            mult *= DGN_G_PRINCESS;
+            if (hp < DGN_MAX_HP) hp += 1;
+            SFX.jackpot();
+            if (window.FX) { window.FX.flash('rgba(255,182,213,0.38)'); window.FX.confetti(26); }
+            msgEl.innerHTML = '👸 Спасение! Принцесса отсчитывает сокровище: банк ×3.0 и +1 ♥ (до максимума).';
+            renderShell();
+            const ptn = doorsEl.children[picked];
+            if (ptn) ptn.classList.add('dgn-princess');
+            if (hp <= 0) { later(() => endRun('death'), 1150); return; }
+            if (floor >= DGN_FLOORS) { later(() => endRun('max'), 1150); return; }
+            renderCash();
+            return;
+          }
+          mult *= DGN_G_CHEST;
           const healed = Math.random() < DGN_CHEST_HEAL && hp < DGN_MAX_HP;
           if (healed) hp += 1;
           SFX.gem(Math.min(floor, 8));
@@ -7612,6 +7644,7 @@ window.GameCore = (function () {
             if (!AppState.placeBet(bet, 'dungeon')) return;
             SFX.tap();
             betAmount = bet;
+            princessRevealed = false;
             hp = DGN_START_HP;
             floor = 0;
             mult = 1;
