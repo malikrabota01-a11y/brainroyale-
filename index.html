@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
   <script>
-    window.BR_VERSION = '2.12.0';
+    window.BR_VERSION = '2.14.0';
     (function () {
       var KEY = 'br_error_log_v1';
       function push(msg, extra) {
@@ -46,10 +46,10 @@
       selection: function () { try { if (this.enabled()) this.tg().HapticFeedback.selectionChanged(); } catch (_) {} }
     };
   </script>
-  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.12.0)</title>
+  <title>BrainRoyale — Умное Казино & Битва Друзей (v2.14.0)</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="BrainRoyale — Умное Казино 🧠🎰" />
-  <meta property="og:description" content="Монеты только за решение задач! 22 игры, 7 тренажёров мозга, 0₽ донатов." />
+  <meta property="og:description" content="Монеты только за решение задач! 23 игры, 7 тренажёров мозга, 0₽ донатов." />
   <meta property="og:locale" content="ru_RU" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
@@ -1017,6 +1017,122 @@ html, body {
   margin: 0 auto 8px;
 }
 
+/* ==== ПОДЗЕМЕЛЬЕ (арт + азарт) ==== */
+.dgn-stage {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 12px 12px 6px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: linear-gradient(180deg, rgba(8, 6, 16, 0.62), rgba(8, 6, 16, 0.82)),
+              url('assets/games/dungeon/bg.jpg') center/cover no-repeat;
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.65), 0 12px 34px rgba(0, 0, 0, 0.5);
+}
+.dgn-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #cdb6ff;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 3px #000;
+}
+.dgn-hearts { font-size: 17px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,61,113,0.7); }
+.dgn-doors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.dgn-door {
+  height: 138px;
+  border-radius: 16px 16px 10px 10px;
+  border: 2px solid rgba(255, 213, 74, 0.4);
+  background: url('assets/games/dungeon/door.jpg') center/cover no-repeat, #241708;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 9px;
+  transition: transform 0.15s ease, border-color 0.25s, box-shadow 0.25s, filter 0.3s;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0,0,0,0.5);
+}
+.dgn-door:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.02);
+  border-color: #ffd54a;
+  box-shadow: 0 10px 26px rgba(255, 213, 74, 0.28), inset 0 0 30px rgba(0,0,0,0.4);
+}
+.dgn-door:active:not(:disabled) { transform: translateY(-1px) scale(0.99); }
+.dgn-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 800;
+  color: #ffd54a;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 213, 74, 0.5);
+  border-radius: 99px;
+  padding: 4px 9px;
+  white-space: nowrap;
+  backdrop-filter: blur(3px);
+  text-transform: uppercase;
+}
+.dgn-suspense {
+  animation: dgn-suspense 0.95s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  border-color: #ffd54a !important;
+  z-index: 2;
+}
+@keyframes dgn-suspense {
+  0% { transform: scale(1) translate(0, 0); }
+  18% { transform: scale(1.04) translate(-4px, 1px); }
+  32% { transform: scale(1.06) translate(5px, -2px); }
+  46% { transform: scale(1.07) translate(-5px, 2px); }
+  60% { transform: scale(1.09) translate(5px, -1px); }
+  73% { transform: scale(1.11) translate(-3px, 1px); }
+  86% { transform: scale(1.12) translate(2px, 0); }
+  100% { transform: scale(1.14) translate(0, 0); }
+}
+.dgn-dim { filter: brightness(0.4) saturate(0.6); }
+.dgn-door.open {
+  animation: dgn-reveal 1.15s cubic-bezier(0.16, 1.25, 0.3, 1) both;
+  border-color: rgba(0, 230, 118, 0.55);
+  cursor: default;
+}
+.dgn-door.open.bad {
+  border-color: rgba(255, 61, 113, 0.65);
+  box-shadow: 0 0 28px rgba(255, 61, 113, 0.35), inset 0 0 30px rgba(0,0,0,0.5);
+}
+@keyframes dgn-reveal {
+  0% { transform: perspective(650px) rotateY(-74deg); opacity: 0.12; filter: brightness(0.25); }
+  38% { transform: perspective(650px) rotateY(16deg); opacity: 1; filter: brightness(1.5); }
+  62% { transform: perspective(650px) rotateY(-7deg) scale(1.04); filter: brightness(1.15); }
+  82% { transform: perspective(650px) rotateY(2deg) scale(1.01); }
+  100% { transform: perspective(650px) rotateY(0deg) scale(1); filter: brightness(1); }
+}
+.dgn-door.dgn-burn {
+  animation: dgn-burn 0.65s ease-in-out 3 both !important;
+  border-color: #ff8c00 !important;
+  box-shadow: 0 0 36px rgba(255, 140, 0, 0.8), inset 0 0 36px rgba(255, 80, 0, 0.65) !important;
+}
+@keyframes dgn-burn {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.7) sepia(0.65) hue-rotate(-18deg) saturate(2.2); }
+}
+.dgn-ember {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  filter: drop-shadow(0 0 7px rgba(255, 120, 0, 0.85));
+  animation: dgn-ember-rise 1.5s ease-out forwards;
+}
+@keyframes dgn-ember-rise {
+  0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 0; }
+  14% { opacity: 1; }
+  100% { transform: translateY(-48vh) scale(1.3) rotate(28deg); opacity: 0; }
+}
+.dgn-cash-row { display: flex; gap: 8px; margin-top: 12px; }
+.dgn-depth { text-align: center; font-size: 11px; color: #9aa7c7; margin-top: 9px; letter-spacing: 2px; text-shadow: 0 1px 2px #000; }
+
 /* Roulette Table */
 .roulette-numbers-grid {
   display: grid;
@@ -1929,6 +2045,18 @@ window.SFX = (function () {
     spin() {
       for (let i = 0; i < 7; i++) tone(850 + Math.random() * 350, 0.03, 'square', 0.04, i * 0.055);
       vibrate(6);
+    },
+    roar() {
+      noiseBurst(0.32, 0.2);
+      tone(78, 0.42, 'sawtooth', 0.2, 0, 52);
+      tone(117, 0.3, 'square', 0.09, 0.06, 82);
+      vibrate(60);
+    },
+    death() {
+      tone(330, 1.05, 'sawtooth', 0.15, 0, 55);
+      tone(165, 1.3, 'sine', 0.16, 0.2, 41);
+      noiseBurst(0.8, 0.18);
+      vibrate(140);
     },
     lose() {
       tone(196, 0.22, 'sawtooth', 0.09, 0, 128);
@@ -2927,6 +3055,14 @@ window.AppState = (function () {
     return state.diffCombo || 0;
   }
 
+  function adminWipeUpgrades() {
+    state.upgrades = { neuro_mult: 0, time_warp: 0, combo_shield: 0, prob_scanner: 0, vault_lock: 0 };
+    state.shieldCharges = 0;
+    state.prestigeCores = 0;
+    state.prestigeCount = 0;
+    save();
+  }
+
   function resetAll() {
     state = defaultState();
     save();
@@ -2972,6 +3108,7 @@ window.AppState = (function () {
     subscribe,
     save,
     resetAll,
+    adminWipeUpgrades,
     toggleMute() {
       state.muted = !state.muted;
       if (window.SFX) window.SFX.setMuted(state.muted);
@@ -7213,6 +7350,289 @@ window.GameCore = (function () {
   });
 
   // =========================================================================
+  // ПОДЗЕМЕЛЬЕ: выбор двери, азарт, глубина
+  // =========================================================================
+  const DGN_FLOORS = 9;
+  const DGN_RAKE = 0.9;            // казино-комиссия на выплате (×0.9)
+  const DGN_G_CHEST = 2.0;         // сокровищница удваивает банк
+  const DGN_G_MONSTER = 1.3;       // победа над монстром — небольшой бонус к банку
+  const DGN_MONSTER_WIN = 0.65;
+  const DGN_CHEST_HEAL = 0.40;     // шанс +1 ♥ за сокровищницу
+  const DGN_MAX_HP = 3;
+  const DGN_START_HP = 2;
+  let dgnCleanup = null;
+
+  GameCore.registerGame({
+    id: 'dungeon',
+    title: 'Подземелье',
+    icon: '🗝️',
+    category: 'fast',
+    tag: '9 ЭТАЖЕЙ',
+    tagColor: '#ffb800',
+    glow: '#ffb800',
+    maxWin: 'x460',
+    rtp: '~77%',
+    desc: 'За каждой дверью — сокровищница, монстр или ловушка. Ловушка убивает мгновенно. Монстр всегда отнимает сердце. У-у-ух, какие двери скрипят!',
+    mathInfo: 'На каждом из 9 этажей три двери скрывают 💰 сокровищницу (×2.0 к банку, 40% шанс +1 ♥, макс 3), 👹 монстра (65% победить: банк +30% и −1 ♥ от ран; 35% поцарапан: банк без бонуса и −1 ♥), 🕳️ ловушку (МГНОВЕННАЯ смерть — банк сгорает независимо от сердец). Банк множится событиями; выплата = ставка × банк × 0.9. Измеренная отдача по этажам (Монте-Карло, 250k походов): 96% / 88% / 83% / 79% / 75% / 71% / 69% / 66% / 62% (средняя ≈ 77%). Кэшаут доступен после каждого этажа.',
+    unmount() {
+      if (dgnCleanup) {
+        dgnCleanup();
+        dgnCleanup = null;
+      }
+    },
+    mount(root) {
+      let active = false;
+      let betAmount = 0;
+      let hp = DGN_START_HP;
+      let floor = 0;             // сколько этажей пройдено
+      let mult = 1;              // сырой множитель банка (выплата = ×0.9)
+      let doors = [];
+      let picked = -1;
+      let timers = [];
+
+      const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+
+      dgnCleanup = () => {
+        timers.forEach((t) => clearTimeout(t));
+        timers = [];
+        if (active && betAmount > 0 && floor >= 1) {
+          const payMult = mult * DGN_RAKE;
+          AppState.winPayout(Math.round(betAmount * payMult), payMult);
+        }
+        active = false;
+      };
+
+      root.innerHTML = `
+        <div class="dgn-stage">
+          <div class="dgn-hud">
+            <span>Этаж: <b class="num" id="dgn-floor">—</b></span>
+            <span class="dgn-hearts" id="dgn-hearts">❤️❤️</span>
+            <span>Банк: <b class="num" id="dgn-pot" style="color:#ffd54a">x1.00</b></span>
+          </div>
+          <div id="dgn-msg" style="text-align:center; font-weight:800; font-size:13px; min-height:20px; color:#ffd54a; margin-bottom:10px; text-shadow:0 1px 4px #000;">Внизу темно. Выбирай дверь.</div>
+          <div class="dgn-doors" id="dgn-doors"></div>
+          <div class="dgn-depth" id="dgn-depth"></div>
+          <div class="dgn-cash-row" id="dgn-cash-row" style="display:none;"></div>
+        </div>
+        <div class="bet-panel" id="dgn-bet"></div>
+      `;
+
+      const doorsEl = root.querySelector('#dgn-doors');
+      const msgEl = root.querySelector('#dgn-msg');
+      const floorEl = root.querySelector('#dgn-floor');
+      const potEl = root.querySelector('#dgn-pot');
+      const heartsEl = root.querySelector('#dgn-hearts');
+      const depthEl = root.querySelector('#dgn-depth');
+      const cashRow = root.querySelector('#dgn-cash-row');
+      const betPanel = root.querySelector('#dgn-bet');
+
+      function heartStr() {
+        let s = '';
+        for (let i = 0; i < DGN_MAX_HP; i++) s += i < hp ? '❤️' : '🖤';
+        return s;
+      }
+
+      function cashWin() { return Math.round(betAmount * mult * DGN_RAKE); }
+
+      function renderDepth() {
+        let dots = '';
+        for (let i = 0; i < DGN_FLOORS; i++) dots += i < floor ? '🟡' : (i === floor && active ? '⚪' : '⚫');
+        depthEl.textContent = dots;
+      }
+
+      function shuffleDoors() {
+        const arr = ['chest', 'monster', 'trap'];
+        for (let k = arr.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          const t = arr[k]; arr[k] = arr[j]; arr[j] = t;
+        }
+        return arr;
+      }
+
+      function doorImg(kind) { return 'assets/games/dungeon/' + kind + '.jpg'; }
+
+      function renderShell() {
+        floorEl.textContent = Math.min(floor + 1, DGN_FLOORS) + '/' + DGN_FLOORS;
+        potEl.textContent = 'x' + mult.toFixed(2);
+        heartsEl.textContent = heartStr();
+        renderDepth();
+      }
+
+      function renderDoors(reveal) {
+        renderShell();
+        doorsEl.innerHTML = '';
+        doors.forEach((d, i) => {
+          const btn = document.createElement('button');
+          if (reveal) {
+            btn.className = 'dgn-door open' + (d === 'trap' || (d === 'monster') ? ' bad' : '');
+            btn.style.backgroundImage = "url('" + doorImg(d) + "')";
+            btn.innerHTML = '<span class="dgn-tag">' + (d === 'chest' ? '💰 Клад ×2.0' : d === 'monster' ? '👹 Монстр' : '🕳️ Ловушка') + '</span>';
+          } else {
+            btn.className = 'dgn-door';
+            btn.innerHTML = '<span class="dgn-tag">Дверь ' + (i + 1) + '</span>';
+            if (active) btn.onclick = () => pickDoor(i);
+          }
+          btn.disabled = reveal || !active || picked >= 0;
+          doorsEl.appendChild(btn);
+        });
+      }
+
+      function renderCash() {
+        if (active && floor >= 1 && hp > 0) {
+          const win = cashWin();
+          cashRow.style.display = 'flex';
+          cashRow.innerHTML = `
+            <button class="btn btn-emerald btn-lg num" id="dgn-cash" style="flex:1.4;">💰 Забрать ${GameCore.fmt(win)} 🪙</button>
+            <button class="btn btn-purple btn-lg" id="dgn-deeper" style="flex:1;">⬇ Глубже</button>
+          `;
+          cashRow.querySelector('#dgn-cash').onclick = () => endRun('cash');
+          cashRow.querySelector('#dgn-deeper').onclick = () => nextFloor();
+        } else {
+          cashRow.style.display = 'none';
+          cashRow.innerHTML = '';
+        }
+      }
+
+      function nextFloor() {
+        if (floor >= DGN_FLOORS) { endRun('max'); return; }
+        picked = -1;
+        doors = shuffleDoors();
+        msgEl.textContent = 'Этаж ' + (floor + 1) + '. Тишина… или почти.';
+        renderDoors(false);
+        renderCash();
+      }
+
+      function endRun(kind) {
+        active = false;
+        cashRow.style.display = 'none';
+        cashRow.innerHTML = '';
+        if (kind === 'death') {
+          msgEl.innerHTML = '💀 Ты не вышел из подземелья. Ставка сгорела.';
+          renderShell();
+        } else {
+          const win = AppState.winPayout(cashWin(), mult * DGN_RAKE);
+          SFX.jackpot();
+          msgEl.innerHTML = (kind === 'max' ? '🏆 Дно подземелья взято! ' : '💰 Ты вышел с добычей: ') + '+' + GameCore.fmt(win) + ' 🪙';
+          renderShell();
+        }
+        doorsEl.querySelectorAll('.dgn-door').forEach((b) => { b.disabled = true; });
+        renderBet();
+      }
+
+      function fireBurst() {
+        try {
+          let layer = document.getElementById('fx-layer');
+          if (!layer) {
+            layer = document.createElement('div');
+            layer.id = 'fx-layer';
+            document.body.appendChild(layer);
+          }
+          const rect = doorsEl.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const base = window.innerHeight - rect.bottom + 10;
+          const EMOJI = ['🔥', '🔥', '🔥', '✨', '💥'];
+          for (let i = 0; i < 26; i++) {
+            const p = document.createElement('span');
+            p.className = 'dgn-ember';
+            p.textContent = EMOJI[(Math.random() * EMOJI.length) | 0];
+            p.style.left = (cx + (Math.random() - 0.5) * rect.width * 0.95) + 'px';
+            p.style.bottom = (base + Math.random() * 26) + 'px';
+            p.style.fontSize = (13 + Math.random() * 22) + 'px';
+            p.style.animationDelay = (Math.random() * 0.35) + 's';
+            p.style.animationDuration = (0.9 + Math.random() * 0.85) + 's';
+            layer.appendChild(p);
+            setTimeout(() => p.remove(), 2200);
+          }
+        } catch (e) {}
+      }
+
+      function pickDoor(i) {
+        if (!active || picked >= 0) return;
+        picked = i;
+        SFX.tap();
+        msgEl.textContent = '🚪 Дверь поддаётся со скрипом…';
+        const kids = doorsEl.children;
+        for (let j = 0; j < kids.length; j++) {
+          kids[j].disabled = true;
+          kids[j].classList.add(j === picked ? 'dgn-suspense' : 'dgn-dim');
+        }
+        later(() => revealPicked(), 950);
+      }
+
+      function revealPicked() {
+        const d = doors[picked];
+        renderDoors(true);
+        if (d === 'chest') {
+          mult *= DGN_G_CHEST;
+          floor += 1;
+          const healed = Math.random() < DGN_CHEST_HEAL && hp < DGN_MAX_HP;
+          if (healed) hp += 1;
+          SFX.gem(Math.min(floor, 8));
+          if (window.FX) window.FX.flash('rgba(255,213,74,0.25)');
+          msgEl.innerHTML = healed
+            ? '💰 Сокровищница! Банк ×2.0 и +1 ♥ выпало из-под монет.'
+            : '💰 Сокровищница! Банк ×2.0.';
+        } else if (d === 'monster') {
+          hp -= 1;
+          floor += 1;
+          SFX.roar();
+          const burnBtn = doorsEl.children[picked];
+          if (burnBtn) burnBtn.classList.add('dgn-burn');
+          fireBurst();
+          if (Math.random() < DGN_MONSTER_WIN) {
+            mult *= DGN_G_MONSTER;
+            SFX.gem(Math.min(floor, 8));
+            if (window.FX) window.FX.flash('rgba(255,140,0,0.3)');
+            msgEl.innerHTML = '🔥 Монстр горит синим пламенем! Банк +30%, но раны стоят 1 ♥.';
+          } else {
+            SFX.wrong();
+            if (window.FX) { window.FX.shake('hard'); window.FX.flash('rgba(255,61,113,0.3)'); }
+            msgEl.innerHTML = '🔥 Монстр в огне, но успел царапнуть! −1 ♥, банк без бонуса.';
+          }
+        } else { // trap — мгновенная смерть
+          SFX.death();
+          if (window.FX) { window.FX.shake('hard'); window.FX.flash('rgba(120,0,30,0.5)'); }
+          msgEl.innerHTML = '🕳️ Колышки нашли плоть. Банк сгорел вместе с тобой.';
+          renderShell();
+          later(() => endRun('death'), 1400);
+          return;
+        }
+        renderShell();
+        if (hp <= 0) { later(() => endRun('death'), 1150); return; }
+        if (floor >= DGN_FLOORS) { later(() => endRun('max'), 1150); return; }
+        renderCash();
+      }
+
+      function renderBet() {
+        GameCore.renderBetControls(betPanel, {
+          minBet: 5,
+          actionLabel: '🗝️ Опуститься в подземелье',
+          disabled: active,
+          onAction(bet) {
+            if (!AppState.placeBet(bet, 'dungeon')) return;
+            SFX.tap();
+            betAmount = bet;
+            hp = DGN_START_HP;
+            floor = 0;
+            mult = 1;
+            picked = -1;
+            active = true;
+            doors = shuffleDoors();
+            msgEl.textContent = 'Этаж 1. Тишина… или почти.';
+            renderDoors(false);
+            renderCash();
+            betPanel.innerHTML = '';
+          }
+        });
+      }
+
+      doors = shuffleDoors();   // декоративные закрытые двери до первой ставки
+      renderDoors(false);
+      renderBet();
+    }
+  });
+
+  // =========================================================================
   // 8. CRYPTO DICE (ДАЙС 0.00 - 99.99)
   // =========================================================================
   let diceCleanup = null;
@@ -11197,14 +11617,14 @@ window.GameCore = (function () {
   // 22. КВАНТОВАЯ МИШЕНЬ (хронометр: останови маркер на золотой зоне)
   // =========================================================================
   const QT_LEVELS = [
-    { f: 0.50, mult: 1.7, speed: 2.4 },
-    { f: 0.35, mult: 2.4, speed: 2.9 },
-    { f: 0.24, mult: 3.5, speed: 3.6 },
-    { f: 0.17, mult: 5.0, speed: 4.3 },
-    { f: 0.12, mult: 7.1, speed: 5.3 },
-    { f: 0.085, mult: 10.0, speed: 6.4 },
-    { f: 0.060, mult: 14.2, speed: 7.7 },
-    { f: 0.040, mult: 21.2, speed: 9.1 }
+    { f: 0.28, mult: 3.0, speed: 3.0 },
+    { f: 0.21, mult: 4.0, speed: 3.7 },
+    { f: 0.15, mult: 5.7, speed: 4.4 },
+    { f: 0.115, mult: 7.4, speed: 5.2 },
+    { f: 0.085, mult: 10.0, speed: 6.1 },
+    { f: 0.060, mult: 14.2, speed: 7.0 },
+    { f: 0.042, mult: 20.2, speed: 8.0 },
+    { f: 0.030, mult: 28.3, speed: 9.1 }
   ];
   let qtCleanup = null;
 
@@ -11216,10 +11636,10 @@ window.GameCore = (function () {
     tag: 'ХРОНОМЕТР',
     tagColor: '#ffb800',
     glow: '#ffb800',
-    maxWin: 'x21.2',
+    maxWin: 'x28.3',
     rtp: '85%',
-    desc: 'Маркер бегает по квантовой шкале — останови его точно на золотой зоне! Зона уже, скорость выше: забери x21.2 на 8-м уровне.',
-    mathInfo: 'Маркер движется по шкале равномерно и отскакивает от краёв. Золотая зона на уровне N: 50%, 35%, 24%, 17%, 12%, 8.5%, 6%, 4% шкалы. Выигрыш за попадание: x1.7, x2.4, x3.5, x5.0, x7.1, x10.0, x14.2, x21.2 (= 0.85 / долю зоны). Промах = ставка сгорает. Кэшаут доступен после каждого попадания. Матожидание каждого уровня — ровно 0.85 ставки: казино в плюсе всегда.',
+    desc: 'Маркер бегает по квантовой шкале — останови его точно на золотой зоне! Зона уже обычного квантового круга, скорость растёт прямо в уровне — забери x28.3 на 8-м.',
+    mathInfo: 'Маркер движется по шкале равномерно, отскакивает от краёв, стартует из случайной точки случайным направлением, а его скорость растёт, пока уровень не закрыт (до +60%). Золотая зона на уровне N: 28%, 21%, 15%, 11.5%, 8.5%, 6%, 4.2%, 3% шкалы. Выигрыш за попадание: x3.0, x4.0, x5.7, x7.4, x10.0, x14.2, x20.2, x28.3 (= 0.85 / долю зоны). Промах = ставка сгорает. Кэшаут доступен после каждого попадания. Матожидание каждого уровня — ровно 0.85 ставки: казино в плюсе всегда.',
     unmount() {
       if (qtCleanup) {
         qtCleanup();
@@ -11233,6 +11653,7 @@ window.GameCore = (function () {
       let betAmount = 0;
       let pos = 0;
       let dir = 1;
+      let levelElapsed = 0;
       let zoneLeft = 25;
       let raf = null;
       let lastTs = 0;
@@ -11308,8 +11729,10 @@ window.GameCore = (function () {
         if (!lastTs) lastTs = ts;
         const dt = Math.min(0.05, (ts - lastTs) / 1000);
         lastTs = ts;
+        levelElapsed += dt;
         const lv = cur();
-        pos += dir * lv.speed * 100 * dt;   // speed: долей шкалы в секунду
+        const ramp = Math.min(1.6, 1 + 0.10 * levelElapsed);   // маркер ускоряется, пока ждёшь лёгкого момента
+        pos += dir * lv.speed * 100 * ramp * dt;   // speed: долей шкалы в секунду
         if (pos >= 100) { pos = 100; dir = -1; }
         else if (pos <= 0) { pos = 0; dir = 1; }
         markerEl.style.left = `calc(${pos}% - 3px)`;
@@ -11318,8 +11741,9 @@ window.GameCore = (function () {
 
       function startLevel(n) {
         level = n;
-        pos = 0;
-        dir = 1;
+        pos = Math.random() * 88 + 6;          // не с края — с выигрышной точки жать не выйдет
+        dir = Math.random() < 0.5 ? -1 : 1;
+        levelElapsed = 0;
         lastTs = 0;
         placeZone();
         renderHud();
@@ -11631,7 +12055,7 @@ window.SocialArena = (function () {
     const meWithTitle = players.find((p) => p.id === ident.id) || meRaw;
     const isFileUrl = window.location.protocol === 'file:';
     const pageUrl = isFileUrl ? '' : window.location.href.split('#')[0];
-    const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино (22 игры, Падающая Кирка и живые задачи без донатов)!');
+    const shareText = encodeURIComponent('🧠🎰 Залетай в BrainRoyale — Умное Казино (23 игры, Подземелье и живые задачи без донатов)!');
 
     boardData = {
       me: meWithTitle,
@@ -11773,6 +12197,25 @@ window.SocialArena = (function () {
     const okAuth = await brFbInit();
     if (!okAuth) return null;
     const st = AppState.get();
+    // АУДИТ: коллекция punishments/{uid} пишет только владелец через консоль Firebase.
+    // Механизм обязательно выполняется, даже если синк пустой — обходим дешёвый кэш-путь.
+    let punishRule = null;
+    const uidForAudit = brFbId();
+    try {
+      const pDoc = await fbState.db.doc('punishments/' + uidForAudit).get();
+      if (pDoc.exists) {
+        const pd = pDoc.data() || {};
+        const stamp = String(pd.ts || '0');
+        if (localStorage.getItem('br_punish_applied_' + uidForAudit + '_' + stamp) !== '1') {
+          const sc = Number(pd.setCoins);
+          punishRule = { stamp, setCoins: Number.isFinite(sc) ? Math.max(0, Math.round(sc)) : null, note: String(pd.note || '').slice(0, 140) };
+          fbState.cachedSync = null;
+        }
+      }
+    } catch (e) {
+      // Нет коллекции / нет правил / офлайн — не ломаемся, просто без наказания.
+      console.warn('[punish] check skipped:', e && e.message);
+    }
     // ВАЖНО: дельты уже вычитаны в syncNow() и приезжают в payload — не потребляем их повторно!
     const opsSource = (payload && Array.isArray(payload.ops) && payload.ops.length)
       ? payload.ops
@@ -11814,7 +12257,7 @@ window.SocialArena = (function () {
         const maxTasks = Math.max(d.tasksSolved || 0, statsNow.tasksSolved || d.tasksSolved || 0);
         const maxBig = Math.max(d.biggestWin || 0, statsNow.biggestWin || d.biggestWin || 0);
         const newVault = st.upgrades && st.upgrades.vault_lock || 0;
-        const unchanged = applied.fresh.length === 0 && !requestedRoom
+        const unchanged = applied.fresh.length === 0 && !requestedRoom && !punishRule
           && coins === (d.coins || 0)
           && maxLvl === (d.level || 1)
           && maxXp === (d.xp || 0)
@@ -11837,6 +12280,11 @@ window.SocialArena = (function () {
           appliedSyncIds: applied.appliedSyncIds,
           updatedAt: fbTs()
         };
+        if (punishRule) {
+          if (punishRule.setCoins !== null && punishRule.setCoins !== undefined) next.coins = punishRule.setCoins;
+          next.level = 1; next.xp = 0; next.prestigeCores = 0; next.vaultLock = 0;
+          next.tasksSolved = 0; next.biggestWin = 0;
+        }
         tx.update(ref, next);
         next._jpDelta = applied.jpDelta; // сколько (новых) джекпот-дельт нужно внести в пул
         return next;
@@ -11852,10 +12300,21 @@ window.SocialArena = (function () {
         appliedSyncIds: fresh.appliedSyncIds,
         createdAt: fbTs(), updatedAt: fbTs()
       };
+      if (punishRule) {
+        if (punishRule.setCoins !== null && punishRule.setCoins !== undefined) next.coins = punishRule.setCoins;
+        next.level = 1; next.xp = 0; next.prestigeCores = 0; next.vaultLock = 0;
+        next.tasksSolved = 0; next.biggestWin = 0;
+      }
       tx.set(ref, next);
       next._jpDelta = fresh.jpDelta;
       return next;
     });
+
+    if (punishRule) {
+      try { localStorage.setItem('br_punish_applied_' + uidForAudit + '_' + punishRule.stamp, '1'); } catch (_) {}
+      try { AppState.adminWipeUpgrades(); } catch (e) { console.warn('[punish] local wipe failed', e); }
+      try { await brFbFeedAdd(meProfile.roomCode, '⚖️ Аудит казино: «' + String(name).slice(0, 40) + '» уличён в накрутке баланса — усиления и ядра аннулированы, банк конфискован!', 'punish'); } catch (_) {}
+    }
 
     const pool = await brFbPool((meProfile && meProfile._jpDelta) || 0);
 
@@ -11906,7 +12365,9 @@ window.SocialArena = (function () {
       jackpotPool: pool,
       botUsername: '',
       demoMode: false,
-      externalNotice: null
+      externalNotice: null,
+      punished: !!punishRule,
+      punishNote: punishRule ? punishRule.note : ''
     };
     fbState.cachedSync = syncResult;
     return syncResult;
@@ -12279,8 +12740,38 @@ window.SocialArena = (function () {
     return { ok: true, myCoins: meDoc.exists ? meDoc.data().coins : 0 };
   }
 
+  let adminCheckCache = { ts: 0, value: null };
+  async function brFbIsAdmin() {
+    if (!BR_FB_ENABLED) return false;
+    if (adminCheckCache.value !== null && Date.now() - adminCheckCache.ts < 300000) return adminCheckCache.value;
+    try {
+      const okAuth = await brFbInit();
+      if (!okAuth) { adminCheckCache = { ts: Date.now(), value: false }; return false; }
+      const au = (firebase.auth().currentUser || {}).uid;
+      if (!au) { adminCheckCache = { ts: Date.now(), value: false }; return false; }
+      const d = await fbState.db.doc('admins/' + au).get();
+      adminCheckCache = { ts: Date.now(), value: !!d.exists };
+      return adminCheckCache.value;
+    } catch (e) {
+      console.warn('[admin] check failed', e && e.message);
+      return false;
+    }
+  }
+
+  async function brFbAuthUid() {
+    try {
+      const ok = await brFbInit();
+      if (!ok) return null;
+      const au = firebase.auth().currentUser;
+      return au ? au.uid : null;
+    } catch (e) { return null; }
+  }
+
   window.BR_FB = {
     enabled: BR_FB_ENABLED,
+    uid: brFbId,
+    authUid: brFbAuthUid,
+    isAdmin: brFbIsAdmin,
     call: async function (endpoint, body) {
       if (!BR_FB_ENABLED) return null;
       try {
@@ -12584,6 +13075,24 @@ window.SocialArena = (function () {
       syncRetryDelayMs = 900;
       const prevCoins = AppState.get().coins;
       AppState.applyServerSnapshot(data.user.coins, data.jackpotPool);
+      if (data.punished && window.UI) {
+        try {
+          SFX.explosion();
+          const noteHtml = data.punishNote ? ' Причина: <b>' + escHtmlSafe(data.punishNote) + '</b>.' : '';
+          UI.openModal(`
+            <div style="text-align:center; padding:6px 2px;">
+              <div style="font-size:46px;">⚖️</div>
+              <h3 style="margin:6px 0 8px;">Аудит казино</h3>
+              <p style="font-size:13.5px; line-height:1.55; color:var(--text-secondary); margin:0 0 10px;">
+                Твой баланс и прокачка признаны накрученными. Казино конфисковало банк и аннулировало все усиления:
+                <b>ядра престижа сгорели, Замок Сейфа сломан, уровни прокачки обнулены</b>.${noteHtml}
+              </p>
+              <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px;">Игра не закрыта — честная игра с нулевой прокачкой доступна.</p>
+              <button class="btn btn-emerald btn-block" onclick="UI.closeModal()">Принимаю правосудие</button>
+            </div>
+          `);
+        } catch (e) { console.warn('[punish] modal failed', e); }
+      }
       if (data.externalNotice && window.UI) {
         UI.toast(data.externalNotice, data.user.coins >= prevCoins ? 'win' : 'loss');
       }
@@ -12782,6 +13291,163 @@ window.SocialArena = (function () {
       await syncNow();
       return res;
     })();
+  }
+
+  async function brFbAdminPunish(targetId, setCoins, note) {
+    try {
+      const coins = Math.max(0, Math.round(Number(setCoins) || 0));
+      await fbState.db.doc('punishments/' + targetId).set({ ts: Date.now(), setCoins: coins, note: String(note || 'Аудит казино').slice(0, 140) });
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  }
+  async function brFbAdminSetCoins(targetId, coins) {
+    try {
+      await fbState.db.doc('profiles/' + targetId).update({ coins: Math.max(0, Math.round(coins)), updatedAt: fbTs() });
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  }
+  async function brFbAdminRename(targetId, name) {
+    try {
+      await fbState.db.doc('profiles/' + targetId).update({ name: String(name).slice(0, 40), updatedAt: fbTs() });
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  }
+  async function brFbAdminWipe(targetId, name, room) {
+    try {
+      await fbState.db.doc('punishments/' + targetId).set({ ts: Date.now(), setCoins: 0, note: 'Профиль удалён аудитом казино' });
+      await fbState.db.doc('profiles/' + targetId).delete();
+      await brFbFeedAdd(room, '⚖️ Аудит казино: «' + String(name).slice(0, 40) + '» стёрт с арены (накрутка).', 'punish');
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  }
+  async function brFbAdminUnpunish(targetId) {
+    try {
+      await fbState.db.doc('punishments/' + targetId).delete();
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  }
+
+  async function openAdminModal() {
+    SFX.tap();
+    if (!(await brFbIsAdmin())) { UI.toast('Нет прав админа 🛠', 'loss'); return; }
+    const room = (boardData && boardData.roomCode) || 'MAIN';
+    const players = await brFbPlayersList(room);
+    const punishSnaps = await Promise.all(players.map((p) => fbState.db.doc('punishments/' + p.id).get().catch(() => null)));
+    const punished = new Set(players.filter((_, i) => punishSnaps[i] && punishSnaps[i].exists).map((p) => p.id));
+    const myId = brFbId();
+
+    const rows = players.map((p) => {
+      const isMe = p.id === myId;
+      const ip = punished.has(p.id);
+      return `
+        <div style="border:1px solid ${isMe ? 'rgba(0,212,255,0.4)' : 'rgba(255,61,113,0.3)'}; border-radius:12px; padding:8px 10px; margin-bottom:8px; background:rgba(0,0,0,0.25);">
+          <div style="display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div style="min-width:0;">
+              <b style="font-size:13px;">${escapeHtml(p.name)}${isMe ? ' (ты)' : ''}</b>
+              ${ip ? ' <span style="font-size:10px; color:#ffb3c2; border:1px solid rgba(255,61,113,0.5); border-radius:8px; padding:0 6px;">⚖️ НАКАЗАН</span>' : ''}
+              <div style="font-size:11px; color:var(--gold-light);" class="num">${GameCore.fmt(p.coins)} 🪙 · ядра ${p.prestigeCores || 0} · ур.${p.level || 1}</div>
+            </div>
+            ${!isMe ? `<div style="display:flex; gap:5px; flex-wrap:wrap;">
+              <button class="btn btn-crimson num admin-act" data-act="punish" data-id="${p.id}" data-name="${escHtmlSafe(p.name)}" style="padding:6px 9px; font-size:12px;" title="Наказать: ядра/уровень/банк конфисковать">⚖️</button>
+              <button class="btn btn-ghost num admin-act" data-act="zero" data-id="${p.id}" data-name="${escHtmlSafe(p.name)}" style="padding:6px 9px; font-size:12px;" title="Обнулить банк (+дельта не восстановит)">💰</button>
+              <button class="btn btn-ghost num admin-act" data-act="mute" data-id="${p.id}" data-name="${escHtmlSafe(p.name)}" style="padding:6px 9px; font-size:12px;" title="Переименовать в «ЧИТЕР (УЛИЧЁН)»">🚫</button>
+              ${ip ? `<button class="btn btn-ghost num admin-act" data-act="unpunish" data-id="${p.id}" data-name="${escHtmlSafe(p.name)}" style="padding:6px 9px; font-size:12px;" title="Снять наказание">✅</button>` : ''}
+              <button class="btn btn-crimson num admin-act" data-act="wipe" data-id="${p.id}" data-name="${escHtmlSafe(p.name)}" style="padding:6px 9px; font-size:12px;" title="СТЕРЕТЬ: профиль + банк + ядра (безвозвратно)">🗑</button>
+            </div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    UI.openModal(`
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="font-weight:900; font-size:17px; color:var(--crimson);">🛠 Аудит казино — админ-панель</div>
+        <button class="icon-btn" onclick="UI.closeModal()">✕</button>
+      </div>
+      <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+        Комната <b>${escapeHtml(room)}</b> · действия применяются мгновенно и необратимы.<br/>
+        ⚖️ Наказание работает удалённо: клиент читера сам обнулится при следующем заходе.
+      </div>
+      <div style="max-height:52vh; overflow-y:auto; padding-right:2px;">${rows || '<div style="text-align:center; color:var(--text-muted); padding:14px;">В комнате пусто</div>'}</div>
+      <div id="admin-form" style="display:none; margin-top:10px; border:1px solid rgba(255,184,0,0.35); border-radius:12px; padding:10px; background:rgba(255,184,0,0.06);"></div>
+    `);
+
+    document.querySelectorAll('.admin-act').forEach((btn) => {
+      btn.onclick = () => {
+        const act = btn.dataset.act;
+        const targetId = btn.dataset.id;
+        const name = btn.dataset.name || 'игрок';
+        if (act === 'mute') {
+          brFbAdminRename(targetId, '🚫 ЧИТЕР (УЛИЧЁН)').then((r) => { UI.toast(r.ok ? '🚫 Переименован в «ЧИТЕР (УЛИЧЁН)»' : 'Ошибка: ' + r.error, r.ok ? 'gold' : 'loss'); syncNow(); });
+          return;
+        }
+        if (act === 'unpunish') {
+          brFbAdminUnpunish(targetId).then((r) => { UI.toast(r.ok ? '✅ Наказание снято' : 'Ошибка: ' + r.error, r.ok ? 'win' : 'loss'); openAdminModal(); });
+          return;
+        }
+        if (act === 'zero') {
+          const form = document.getElementById('admin-form');
+          form.style.display = 'block';
+          form.innerHTML = `
+            <div style="font-size:13px; font-weight:800; margin-bottom:6px;">💰 Конфискация банка «${escapeHtml(name)}»</div>
+            <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:8px;">Банк станет 0 в облаке мгновенно, а клиент игрока при следующем заходе довершит наказание (ядра, уровень, XP, апгрейды). Дельта-синк не восстановит конфискованное.</div>
+            <button class="btn btn-crimson btn-block" id="admin-zero-go">Конфисковать всё (0 🪙)</button>
+            <button class="btn btn-ghost btn-block" id="admin-zero-cancel" style="margin-top:6px;">Отмена</button>
+          `;
+          form.querySelector('#admin-zero-cancel').onclick = () => { form.style.display = 'none'; };
+          form.querySelector('#admin-zero-go').onclick = () => {
+            form.style.display = 'none';
+            brFbAdminSetCoins(targetId, 0).then(async (r) => {
+              if (!r.ok) { UI.toast('Ошибка: ' + r.error, 'loss'); return; }
+              await brFbAdminPunish(targetId, 0, 'Конфискация банка аудитом казино');
+              await brFbFeedAdd(room, '⚖️ Аудит казино: банк «' + name.slice(0, 40) + '» конфискован!', 'punish');
+              SFX.jackpot(); UI.toast('💰 Банк конфискован', 'gold'); syncNow();
+            });
+          };
+          return;
+        }
+        if (act === 'wipe') {
+          const form = document.getElementById('admin-form');
+          form.style.display = 'block';
+          form.innerHTML = `
+            <div style="font-size:13px; font-weight:800; color:#ff8a5c; margin-bottom:6px;">🗑 СТЕРЕТЬ «${escapeHtml(name)}»?</div>
+            <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:8px;">Профиль удалён из арены, банк 0, на его устройстве сотрутся все усиления и ядра. Действие необратимо — паяльник даётся один раз.</div>
+            <button class="btn btn-crimson btn-block" id="admin-wipe-go">Стереть навсегда</button>
+            <button class="btn btn-ghost btn-block" id="admin-wipe-cancel" style="margin-top:6px;">Отмена</button>
+          `;
+          form.querySelector('#admin-wipe-cancel').onclick = () => { form.style.display = 'none'; };
+          form.querySelector('#admin-wipe-go').onclick = () => {
+            form.style.display = 'none';
+            brFbAdminWipe(targetId, name, room).then((r) => { UI.toast(r.ok ? '🗑 Стерт с арены' : 'Ошибка: ' + r.error, r.ok ? 'gold' : 'loss'); syncNow(); });
+          };
+          return;
+        }
+        // punish — форма с выбором конфискации и заметкой
+        const form = document.getElementById('admin-form');
+        form.style.display = 'block';
+        form.innerHTML = `
+          <div style="font-size:13px; font-weight:800; margin-bottom:6px;">⚖️ Наказание для «${escapeHtml(name)}»</div>
+          <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Сколько монет оставить (конфискация до нуля)</label>
+          <input type="number" id="admin-punish-coins" value="0" min="0" step="1" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:8px; padding:9px 10px; font-size:14px; margin-bottom:8px;" />
+          <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Причина (увидит игрок)</label>
+          <input type="text" id="admin-punish-note" value="Накрутка баланса через консоль браузера" maxlength="140" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:8px; padding:9px 10px; font-size:13px; margin-bottom:8px;" />
+          <button class="btn btn-crimson btn-block" id="admin-punish-go">⚖️ Наказать: ядра, уровень, XP, апгрейды — в ноль</button>
+          <button class="btn btn-ghost btn-block" id="admin-punish-cancel" style="margin-top:6px;">Отмена</button>
+        `;
+        form.querySelector('#admin-punish-cancel').onclick = () => { form.style.display = 'none'; };
+        form.querySelector('#admin-punish-go').onclick = () => {
+          const coins = Number(form.querySelector('#admin-punish-coins').value) || 0;
+          const note = form.querySelector('#admin-punish-note').value || 'Аудит казино';
+          form.style.display = 'none';
+          brFbAdminPunish(targetId, coins, note).then((r) => {
+            if (!r.ok) { UI.toast('Ошибка: ' + r.error, 'loss'); return; }
+            brFbFeedAdd(room, '⚖️ Аудит казино: «' + String(name).slice(0, 40) + '» уличён в накрутке — ядра, уровень и усиления аннулированы!', 'punish');
+            SFX.explosion(); UI.toast('⚖️ Наказание отправлено. Сработает при его следующем заходе.', 'gold');
+            syncNow(); openAdminModal();
+          });
+        };
+      };
+    });
   }
 
   function openHeistModal(targetPlayer) {
@@ -13109,6 +13775,11 @@ window.SocialArena = (function () {
 
     const me = boardData.me;
     const players = boardData.players || [];
+    const isAdmin = fbState.isAdmin === true;
+    if (!isAdmin && BR_FB_ENABLED && !fbState.adminProbeSent) {
+      fbState.adminProbeSent = true;
+      brFbIsAdmin().then((v) => { if (v) { fbState.isAdmin = true; refreshIfVisible(); } });
+    }
     announceLeaderIfChanged(staticMode ? 'АРЕНА 24/7' : (boardData.roomCode || 'MAIN'), players);
     const feed = boardData.feed || [];
     const loading = !boardData.me && !staticMode;
@@ -13132,6 +13803,7 @@ window.SocialArena = (function () {
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${boardData.shareUrl ? `<button class="btn btn-emerald" id="soc-invite" style="padding:7px 12px; font-size:12px;">📲 Позвать друга</button>` : ''}
             ${!staticMode ? `<button class="btn btn-ghost" id="soc-room" style="padding:7px 11px; font-size:12px;">🏠 Код комнаты</button>` : ''}
+            ${isAdmin ? `<button class="btn btn-crimson" id="soc-admin" style="padding:7px 11px; font-size:12px;">🛠 Аудит</button>` : ''}
             <button class="btn btn-ghost" id="soc-rename" style="padding:7px 11px; font-size:12px;">✏️ Ник</button>
             ${st.coins < 200 ? `<button class="btn btn-crimson" id="soc-beg" style="padding:7px 12px; font-size:12px;">🥺 На дошик</button>` : ''}
           </div>
@@ -13272,6 +13944,9 @@ window.SocialArena = (function () {
         }
       };
     }
+
+    const adminBtn = main.querySelector('#soc-admin');
+    if (adminBtn) adminBtn.onclick = () => openAdminModal();
 
     main.querySelectorAll('.soc-duel').forEach((btn) => {
       btn.onclick = () => {
@@ -13923,7 +14598,7 @@ window.App = (function () {
     'rocket', 'roulette', 'slots', 'plinko', 'dice', 'baccarat', 'wheel', 'keno'
   ]);
   const NEW_HIT_IDS = new Set([
-    'mineslot', 'olympus', 'doghouse', 'bonanza', 'bookofra', 'neopattern', 'qtarget'
+    'mineslot', 'olympus', 'doghouse', 'bonanza', 'bookofra', 'neopattern', 'qtarget', 'dungeon'
   ]);
 
   // Brain Trainer state
@@ -15577,10 +16252,23 @@ window.App = (function () {
       <button class="btn btn-ghost btn-block" id="prof-reset" style="color:var(--crimson);">
         🗑️ Сбросить весь прогресс
       </button>
+      <div style="text-align:center; font-size:10px; color:var(--text-muted); margin-top:12px;">
+        🛠 Твой Firebase UID (для админки): <span class="num" id="prof-fbuid" style="user-select:text;">…</span><br>
+        Профиль в облаке: <span class="num" style="user-select:text;">${window.BR_FB && window.BR_FB.uid ? window.BR_FB.uid() : 'локальный'}</span>
+      </div>
       <div style="text-align:center; font-size:10px; color:var(--text-muted); margin-top:14px; line-height:1.5;">
         🎵 Музыка: Kevin MacLeod (incompetech.com) · лицензия CC&nbsp;BY&nbsp;4.0<br>🎙️ Озвучка: ИИ — саркастичный хозяин казино · Иконки и сцены: сгенерированы ИИ
       </div>
     `;
+
+    (async () => {
+      const el = main.querySelector('#prof-fbuid');
+      if (!el) return;
+      try {
+        const id = window.BR_FB && window.BR_FB.authUid ? await window.BR_FB.authUid() : null;
+        el.textContent = id || 'локальный режим';
+      } catch (e) { el.textContent = 'ошибка'; }
+    })();
 
     main.querySelector('#prof-daily').onclick = () => {
       SFX.tap();
